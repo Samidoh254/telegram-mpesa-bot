@@ -1,0 +1,12 @@
+{
+  "name": "telegram-mpesa-bot",
+  "version": "1.0.0",
+  "description": "Telegram bot with M-Pesa integration",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js"
+  },
+  "keywords": ["telegram", "mpesa", "bot"],
+  "author": "",
+  "license": "ISC"
+}
