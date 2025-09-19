@@ -24,20 +24,20 @@ app.post(`/bot${process.env.TELEGRAM_BOT_TOKEN}`, (req, res) => {
 
 // 🔹 Enhanced Services Catalog with Sub-Flows
 const services = [
-  { id: 1, name: "📝 Transcription Training", price: 130, subFlow: "transcription_training" },
-  { id: 2, name: "🔗 Application Link", price: 200, subFlow: "transcription_link" },
-  { id: 3, name: "🌍 Remote AI Jobs Training", price: 130, subFlow: "remote_ai_jobs" },
-  { id: 4, name: "📚 Remote Work Application Training", price: 130, subFlow: "remote_work_apply" },
+  { id: 1, name: "📝 Transcription Training", price: 1500, subFlow: "transcription_training" },
+  { id: 2, name: "🔗 Application Link", price: null, subFlow: "transcription_link" },
+  { id: 3, name: "🌍 Remote AI Jobs Training", price: 2000, subFlow: "remote_ai_jobs" },
+  { id: 4, name: "📚 Remote Work Application Training", price: 1800, subFlow: "remote_work_apply" },
   { id: 5, name: "🛡️ Proxies", price: null, subFlow: "proxies" },
   { id: 6, name: "📦 Fullu", price: null, subFlow: "fullu" },
   { id: 7, name: "📞 USA Numbers", price: null, subFlow: "usa_numbers" },
-  { id: 8, name: "🌐 Website Development", price: 3000, subFlow: "website_dev" },
-  { id: 9, name: "🤖 Bot Development", price: 2500, subFlow: "bot_dev" },
+  { id: 8, name: "🌐 Website Development", price: 10000, subFlow: "website_dev" },
+  { id: 9, name: "🤖 Bot Development", price: 15000, subFlow: "bot_dev" },
   { id: 10, name: "🔒 BM Verification", price: 5000, subFlow: "bm_verification" },
-  { id: 11, name: "💎 OnlyFans Training", price: 1000, subFlow: "onlyfans_training" },
+  { id: 11, name: "💎 OnlyFans Training", price: 3000, subFlow: "onlyfans_training" },
   { id: 12, name: "✍️ Freelance Writing", price: 2500, subFlow: "freelance_writing" },
-  { id: 13, name: "🎨 Graphic Design", price: 1500, subFlow: "graphic_design" },
-  { id: 14, name: "📈 Social Media Management", price: 1000, subFlow: "social_media" },
+  { id: 13, name: "🎨 Graphic Design", price: 3500, subFlow: "graphic_design" },
+  { id: 14, name: "📈 Social Media Management", price: 4000, subFlow: "social_media" },
 ];
 
 // Sub-flow configurations
@@ -147,13 +147,22 @@ function showMainMenu(chatId) {
   userState.set(chatId, { step: "chooseService" });
 }
 
-// ✅ Strict Message Handler: Random Text/Invalid → Main Menu
+// ✅ Enhanced Message Handler: Handle "Start" Restart, Strict Validations
 bot.on("message", (msg) => {
   const chatId = msg.chat.id;
+  const text = msg.text?.trim().toLowerCase(); // Normalize for "start" check
+  if (!text) return;
+
+  // Global "Start" restart anywhere
+  if (text === "start") {
+    userState.delete(chatId);
+    showMainMenu(chatId);
+    return;
+  }
 
   // Handle photo uploads for crypto proof
   if (msg.photo && userState.get(chatId)?.step === "uploadProof") {
-    bot.sendMessage(chatId, "📸 Proof received. Verification in 24h.", {
+    bot.sendMessage(chatId, "📸 Proof received. Verification in 24h. Great choice—let's get your service ready!", {
       parse_mode: "Markdown",
       reply_markup: getFAQButtons(),
     });
@@ -161,46 +170,30 @@ bot.on("message", (msg) => {
     return;
   }
 
-  const text = msg.text?.trim();
-  if (!text) return;
-
   const state = userState.get(chatId);
   if (!state) {
     showMainMenu(chatId);
     return;
   }
 
-  // Check if text is random (letters or invalid for step) → Main Menu
-  const isRandomText = !/^\d+$/.test(text) && text.length > 0 && !text.match(/^[a-zA-Z\s]+$/); // Not pure numbers or words
-  if (isRandomText) {
-    bot.sendMessage(chatId, "🔄 Redirecting to main menu.", { reply_markup: getFAQButtons() });
-    showMainMenu(chatId);
-    return;
-  }
-
-  // Handle pure numbers as restart if invalid for context
-  const isPureNumbers = /^\d+$/.test(text);
-  if (isPureNumbers && state.step !== "enterPhone" && state.step !== "fulluQuantity" && state.step !== "usaOtherCode") {
-    showMainMenu(chatId);
-    return;
-  }
-
-  // Specific step validations
+  // Specific step validations with conversational tone
   switch (state.step) {
     case "enterPhone":
       if (/^2547\d{8}$/.test(text)) {
         state.phone = text;
-        bot.sendMessage(chatId, `📱 Confirm: ${text}?`, {
+        bot.sendMessage(chatId, `Excellent! Confirming your number: ${text}. Ready to send the payment prompt?`, {
           parse_mode: "Markdown",
           reply_markup: {
             inline_keyboard: [
-              [{ text: "✅ Yes", callback_data: `confirmPhone_${text}` }],
-              [{ text: "✏️ Change", callback_data: "changePhone" }],
+              [{ text: "✅ Yes, Send Prompt", callback_data: `confirmPhone_${text}` }],
+              [{ text: "✏️ Change Number", callback_data: "changePhone" }],
             ],
           },
         });
-      } else {
-        bot.sendMessage(chatId, "⚠️ Invalid. Enter: 2547XXXXXXXX", { parse_mode: "Markdown" });
+      } else if (text !== "start") { // Ignore "start" as handled above
+        bot.sendMessage(chatId, "⚠️ Invalid number. Please enter exactly: 2547XXXXXXXX (e.g., 254712345678). We're almost there—try again!", {
+          parse_mode: "Markdown",
+        });
       }
       break;
 
@@ -209,29 +202,31 @@ bot.on("message", (msg) => {
       if (qty >= 1 && qty <= 1000) {
         state.quantity = qty;
         state.finalPrice = qty * 150;
-        bot.sendMessage(chatId, `🧾 ${qty} Fullu = Ksh ${state.finalPrice}\n\nProceed?`, {
+        bot.sendMessage(chatId, `Perfect selection! ${qty} Fullu at Ksh 150 each totals Ksh ${state.finalPrice}. Excited to fulfill your order—what's next?`, {
           parse_mode: "Markdown",
           reply_markup: {
             inline_keyboard: [
-              [{ text: "💳 Pay", callback_data: "choosePayment" }],
-              [{ text: "🔙 Back", callback_data: "backToService" }],
+              [{ text: "💳 Proceed to Payment", callback_data: "choosePayment" }],
+              [{ text: "🔙 Adjust Quantity", callback_data: "backToService" }],
             ],
           },
         });
         state.step = "confirmOrder";
-      } else {
-        bot.sendMessage(chatId, "⚠️ Invalid. Enter 1-1000.", { parse_mode: "Markdown" });
+      } else if (text !== "start") {
+        bot.sendMessage(chatId, "⚠️ Invalid quantity. Please enter a number between 1-1000. Tell me how many you'd like!", {
+          parse_mode: "Markdown",
+        });
       }
       break;
 
     case "usaOtherCode":
       state.codeRequest = text;
       state.finalPrice = 150;
-      bot.sendMessage(chatId, `🔑 Request: ${text}\n\nKsh 150. Proceed?`, {
+      bot.sendMessage(chatId, `Got it—your request for "${text}" sounds spot on. That's Ksh 150. Shall we proceed to secure it for you?`, {
         parse_mode: "Markdown",
         reply_markup: {
           inline_keyboard: [
-            [{ text: "💳 Pay", callback_data: "choosePayment" }],
+            [{ text: "💳 Yes, Pay Now", callback_data: "choosePayment" }],
             [{ text: "🔙 Back", callback_data: "backToService" }],
           ],
         },
@@ -241,12 +236,12 @@ bot.on("message", (msg) => {
 
     case "websiteDetails":
       state.websiteDetails = text;
-      bot.sendMessage(chatId, `🌐 Project: ${text}\n\nKsh 10,000. Proceed?`, {
+      bot.sendMessage(chatId, `Wonderful idea! A ${text} website for Ksh 10,000. Let's build something amazing—ready to get started?`, {
         parse_mode: "Markdown",
         reply_markup: {
           inline_keyboard: [
-            [{ text: "💳 Pay", callback_data: "choosePayment" }],
-            [{ text: "🔙 Back", callback_data: "backToService" }],
+            [{ text: "💳 Secure & Pay", callback_data: "choosePayment" }],
+            [{ text: "🔙 Refine Details", callback_data: "backToService" }],
           ],
         },
       });
@@ -255,12 +250,12 @@ bot.on("message", (msg) => {
 
     case "botDetails":
       state.botDetails = text;
-      bot.sendMessage(chatId, `🤖 Project: ${text}\n\nKsh 15,000. Proceed?`, {
+      bot.sendMessage(chatId, `Love that concept—a ${text} bot for Ksh 15,000. We're experts at this; excited to bring it to life! Proceed?`, {
         parse_mode: "Markdown",
         reply_markup: {
           inline_keyboard: [
-            [{ text: "💳 Pay", callback_data: "choosePayment" }],
-            [{ text: "🔙 Back", callback_data: "backToService" }],
+            [{ text: "💳 Yes, Let's Build", callback_data: "choosePayment" }],
+            [{ text: "🔙 Adjust Specs", callback_data: "backToService" }],
           ],
         },
       });
@@ -269,11 +264,11 @@ bot.on("message", (msg) => {
 
     case "bmCredentials":
       state.bmCredentials = text;
-      bot.sendMessage(chatId, `🔒 Credentials received.\n\nKsh 5,000. Proceed?`, {
+      bot.sendMessage(chatId, `Thanks for trusting us with your details. BM Verification at Ksh 5,000—your account will be verified swiftly. Pay to begin?`, {
         parse_mode: "Markdown",
         reply_markup: {
           inline_keyboard: [
-            [{ text: "💳 Pay", callback_data: "choosePayment" }],
+            [{ text: "💳 Confirm Payment", callback_data: "choosePayment" }],
             [{ text: "🔙 Back", callback_data: "backToService" }],
           ],
         },
@@ -284,12 +279,12 @@ bot.on("message", (msg) => {
     case "writingDetails":
       state.writingDetails = text;
       state.finalPrice = 2500;
-      bot.sendMessage(chatId, `✍️ Project: ${text}\n\nKsh 2,500. Proceed?`, {
+      bot.sendMessage(chatId, `Fantastic topic: ${text}. We'll craft high-quality content for Ksh 2,500. Sound good? Let's make it happen!`, {
         parse_mode: "Markdown",
         reply_markup: {
           inline_keyboard: [
-            [{ text: "💳 Pay", callback_data: "choosePayment" }],
-            [{ text: "🔙 Back", callback_data: "backToService" }],
+            [{ text: "💳 Start Writing", callback_data: "choosePayment" }],
+            [{ text: "🔙 Edit Request", callback_data: "backToService" }],
           ],
         },
       });
@@ -297,13 +292,17 @@ bot.on("message", (msg) => {
       break;
 
     default:
-      // Any other random input → Main Menu
+      // Any other input → Main Menu with conversational nudge
+      bot.sendMessage(chatId, `Hmm, that doesn't quite match what I expected. No worries—let's head back to the main menu to explore options. What catches your eye today?`, {
+        parse_mode: "Markdown",
+        reply_markup: getFAQButtons(),
+      });
       showMainMenu(chatId);
       break;
   }
 });
 
-// ✅ Enhanced Button Handler: Ensure All Flows Work
+// ✅ Enhanced Button Handler: Conversational Flows with Narrowing
 bot.on("callback_query", async (query) => {
   const chatId = query.message.chat.id;
   const data = query.data;
@@ -321,14 +320,14 @@ bot.on("callback_query", async (query) => {
     return;
   }
   if (data === "show_faq") {
-    bot.sendMessage(chatId, "❓ *FAQs*\n\n💳 Pay: M-Pesa PIN or Crypto proof.\n⏱️ Delivery: 24-48h.\n🔒 Secure & Private.", {
+    bot.sendMessage(chatId, "❓ *Quick FAQs*\n\n💳 *Payments:* M-Pesa (enter PIN) or Crypto (upload proof).\n⏱️ *Delivery:* 24-48 hours.\n🔒 *Secure:* Your data is protected.\n\nGot questions? I'm here! 😊", {
       parse_mode: "Markdown",
       reply_markup: getFAQButtons(),
     });
     return;
   }
   if (data === "faq_payment") {
-    bot.sendMessage(chatId, "💳 *Payments*\n\nM-Pesa: Enter PIN on prompt.\nCrypto: Send to BTC/USDT, upload proof.", {
+    bot.sendMessage(chatId, "💳 *Payment Made Easy*\n\n📲 *M-Pesa:* We'll send a prompt—enter your PIN.\n🪙 *Crypto:* Send to BTC: 1ABCyourBTCwallet or USDT: TGyourTRC20wallet, then share proof.\n\nReady when you are!", {
       parse_mode: "Markdown",
       reply_markup: getFAQButtons(),
     });
@@ -339,7 +338,7 @@ bot.on("callback_query", async (query) => {
     return;
   }
 
-  // Service Selection
+  // Service Selection: Start Conversational Flow
   if (data.startsWith("service_")) {
     const serviceId = parseInt(data.split("_")[1]);
     const service = services.find((s) => s.id === serviceId);
@@ -349,20 +348,23 @@ bot.on("callback_query", async (query) => {
     state.serviceId = serviceId;
     state.finalPrice = service.price || 0;
 
+    bot.sendMessage(chatId, `Great choice on ${service.name}! 😊 This can really boost your freelancing. Let's narrow it down—what specific aspect are you most interested in?`, {
+      parse_mode: "Markdown",
+    });
     handleServiceSelection(chatId, serviceId);
     return;
   }
 
-  // Transcription Training
+  // Transcription Training: Narrow to Account
   if (data.startsWith("trans_")) {
-    state.account = data.split("_")[1];
+    state.account = data.split("_")[1].toUpperCase();
     state.finalPrice = 1500;
-    bot.sendMessage(chatId, `🎓 Training: ${state.account.toUpperCase()}\n\nKsh 1,500. Proceed?`, {
+    bot.sendMessage(chatId, `Smart pick—${state.account} training is in high demand! We'll cover applications, tips, and insider strategies. Any particular challenges you're facing with it? (Optional, or proceed.) Price: Ksh 1,500.`, {
       parse_mode: "Markdown",
       reply_markup: {
         inline_keyboard: [
-          [{ text: "💳 Pay", callback_data: "choosePayment" }],
-          [{ text: "🔙 Back", callback_data: "backToService" }],
+          [{ text: "💳 Proceed to Payment", callback_data: "choosePayment" }],
+          [{ text: "🔙 Explore More", callback_data: "backToService" }],
         ],
       },
     });
@@ -370,11 +372,11 @@ bot.on("callback_query", async (query) => {
     return;
   }
 
-  // Transcription Link
+  // Transcription Link: Narrow to Type then Account
   if (data === "link_private" || data === "link_public") {
-    state.linkType = data === "link_private" ? "Private" : "Public";
+    state.linkType = data === "link_private" ? "Private Exclusive" : "Public";
     state.finalPrice = data === "link_private" ? 800 : 300;
-    bot.sendMessage(chatId, `${state.linkType} Link: Ksh ${state.finalPrice}\n\nChoose account:`, {
+    bot.sendMessage(chatId, `Excellent—${state.linkType} links give you that edge! Which transcription platform are you targeting? This will get you the perfect fit.`, {
       parse_mode: "Markdown",
       reply_markup: { inline_keyboard: SUB_FLOWS.transcription_link.accounts },
     });
@@ -382,13 +384,13 @@ bot.on("callback_query", async (query) => {
     return;
   }
   if (data.startsWith("account_")) {
-    state.account = data.split("_")[1];
-    bot.sendMessage(chatId, `${state.linkType} for ${state.account.toUpperCase()}\n\nKsh ${state.finalPrice}. Proceed?`, {
+    state.account = data.split("_")[1].toUpperCase();
+    bot.sendMessage(chatId, `Spot on! ${state.linkType} for ${state.account} at Ksh ${state.finalPrice}. You'll have direct access—imagine the opportunities! Ready to grab it?`, {
       parse_mode: "Markdown",
       reply_markup: {
         inline_keyboard: [
-          [{ text: "💳 Pay", callback_data: "choosePayment" }],
-          [{ text: "🔙 Back", callback_data: "backToService" }],
+          [{ text: "💳 Secure the Link", callback_data: "choosePayment" }],
+          [{ text: "🔙 Adjust", callback_data: "backToService" }],
         ],
       },
     });
@@ -396,15 +398,15 @@ bot.on("callback_query", async (query) => {
     return;
   }
 
-  // Remote AI Jobs
+  // Remote AI Jobs: Narrow to Specific Job
   if (data.startsWith("ai_")) {
     state.job = data.split("_")[1].replace(/_/g, ' ').toUpperCase();
-    bot.sendMessage(chatId, `🌍 Job: ${state.job}\n\nKsh 2,000. Proceed?`, {
+    bot.sendMessage(chatId, `Thrilling! ${state.job} training is a game-changer for remote work. We'll dive into resumes, interviews, and exclusive tips. What's your experience level with AI tasks? (Share if you'd like, or proceed.) Price: Ksh 2,000.`, {
       parse_mode: "Markdown",
       reply_markup: {
         inline_keyboard: [
-          [{ text: "💳 Pay", callback_data: "choosePayment" }],
-          [{ text: "🔙 Back", callback_data: "backToService" }],
+          [{ text: "💳 Start Learning", callback_data: "choosePayment" }],
+          [{ text: "🔙 Choose Another", callback_data: "backToService" }],
         ],
       },
     });
@@ -412,10 +414,10 @@ bot.on("callback_query", async (query) => {
     return;
   }
 
-  // Proxies
+  // Proxies: Narrow to Country then Subscription
   if (data.startsWith("proxy_")) {
-    state.country = data.split("_")[1];
-    bot.sendMessage(chatId, `🛡️ Country: ${state.country.toUpperCase()}\n\nChoose plan:`, {
+    state.country = data.split("_")[1].toUpperCase();
+    bot.sendMessage(chatId, `Reliable proxies for ${state.country}—perfect for unrestricted access! Now, how long do you need it for? This ensures seamless freelancing.`, {
       parse_mode: "Markdown",
       reply_markup: { inline_keyboard: SUB_FLOWS.proxies.subscriptions },
     });
@@ -425,12 +427,12 @@ bot.on("callback_query", async (query) => {
   if (data === "sub_monthly" || data === "sub_weekly") {
     state.subscription = data === "sub_monthly" ? "Monthly" : "Weekly";
     state.finalPrice = data === "sub_monthly" ? 2500 : 800;
-    bot.sendMessage(chatId, `${state.subscription} Proxy: ${state.country.toUpperCase()}\n\nKsh ${state.finalPrice}. Proceed?`, {
+    bot.sendMessage(chatId, `${state.subscription} plan for ${state.country} proxies at Ksh ${state.finalPrice}. High-speed and secure—ideal for your needs! Shall we activate?`, {
       parse_mode: "Markdown",
       reply_markup: {
         inline_keyboard: [
-          [{ text: "💳 Pay", callback_data: "choosePayment" }],
-          [{ text: "🔙 Back", callback_data: "backToService" }],
+          [{ text: "💳 Activate Now", callback_data: "choosePayment" }],
+          [{ text: "🔙 Change Plan", callback_data: "backToService" }],
         ],
       },
     });
@@ -438,15 +440,15 @@ bot.on("callback_query", async (query) => {
     return;
   }
 
-  // USA Numbers
+  // USA Numbers: Narrow to Purpose
   if (data === "num_whatsapp") {
     state.numType = "WhatsApp";
     state.finalPrice = 1000;
-    bot.sendMessage(chatId, `📞 WhatsApp Number\n\nKsh 1,000. Proceed?`, {
+    bot.sendMessage(chatId, `USA number for WhatsApp—unlocks global chats! At Ksh 1,000, you'll get it instantly. Any specific use case in mind? Proceed whenever ready.`, {
       parse_mode: "Markdown",
       reply_markup: {
         inline_keyboard: [
-          [{ text: "💳 Pay", callback_data: "choosePayment" }],
+          [{ text: "💳 Get Number", callback_data: "choosePayment" }],
           [{ text: "🔙 Back", callback_data: "backToService" }],
         ],
       },
@@ -456,50 +458,50 @@ bot.on("callback_query", async (query) => {
   }
   if (data === "num_other") {
     state.step = "usaOtherCode";
-    bot.sendMessage(chatId, `🔐 Other: What code? (e.g., SMS for Gmail)`, {
+    bot.sendMessage(chatId, `Versatile USA numbers for verifications—smart move! What exact service or code do you need it for? (e.g., 'SMS for Gmail'). I'm here to tailor it perfectly.`, {
       parse_mode: "Markdown",
       reply_markup: getFAQButtons(),
     });
     return;
   }
 
-  // Website Dev
-  if (data.startsWith("service_") && state.service.subFlow === "website_dev") {
+  // Website Dev: Narrow to Details
+  if (state.service?.subFlow === "website_dev") {
     state.step = "websiteDetails";
-    bot.sendMessage(chatId, `🌐 Describe project: (e.g., E-commerce site)`, {
+    bot.sendMessage(chatId, `Website development—let's create your digital presence! Tell me more: What type of site (e.g., e-commerce, portfolio)? Features? Budget notes? The more details, the better I can customize.`, {
       parse_mode: "Markdown",
       reply_markup: getFAQButtons(),
     });
     return;
   }
 
-  // Bot Dev
-  if (data.startsWith("service_") && state.service.subFlow === "bot_dev") {
+  // Bot Dev: Narrow to Details
+  if (state.service?.subFlow === "bot_dev") {
     state.step = "botDetails";
-    bot.sendMessage(chatId, `🤖 Bot type: (e.g., Telegram sales bot)`, {
+    bot.sendMessage(chatId, `Custom bot development—automation at its best! Describe your vision: Platform (e.g., Telegram)? Functions? This will make it spot-on for you.`, {
       parse_mode: "Markdown",
       reply_markup: getFAQButtons(),
     });
     return;
   }
 
-  // BM Verification
-  if (data.startsWith("service_") && state.service.subFlow === "bm_verification") {
+  // BM Verification: Narrow to Credentials
+  if (state.service?.subFlow === "bm_verification") {
     state.step = "bmCredentials";
-    bot.sendMessage(chatId, `🔒 Share BM credentials: (email/password)`, {
+    bot.sendMessage(chatId, `BM verification—secure and swift! Share your credentials (email/password) safely here. We'll handle the rest confidentially. What's the account for? (Optional insight.) Price: Ksh 5,000.`, {
       parse_mode: "Markdown",
       reply_markup: getFAQButtons(),
     });
     return;
   }
 
-  // OnlyFans
-  if (data.startsWith("service_") && state.service.subFlow === "onlyfans_training") {
-    bot.sendMessage(chatId, `💎 OnlyFans Training\n\nKsh 3,000. Proceed?`, {
+  // OnlyFans Training: Conversational Confirm
+  if (state.service?.subFlow === "onlyfans_training") {
+    bot.sendMessage(chatId, `OnlyFans training—empower your content game! Setup, strategies, monetization secrets for Ksh 3,000. What's your goal—new account or scaling? Proceed to unlock tips.`, {
       parse_mode: "Markdown",
       reply_markup: {
         inline_keyboard: [
-          [{ text: "💳 Pay", callback_data: "choosePayment" }],
+          [{ text: "💳 Enroll & Pay", callback_data: "choosePayment" }],
           [{ text: "🔙 Back", callback_data: "backToService" }],
         ],
       },
@@ -508,19 +510,19 @@ bot.on("callback_query", async (query) => {
     return;
   }
 
-  // Freelance Writing
-  if (data.startsWith("service_") && state.service.subFlow === "freelance_writing") {
+  // Freelance Writing: Narrow to Details
+  if (state.service?.subFlow === "freelance_writing") {
     state.step = "writingDetails";
-    bot.sendMessage(chatId, `✍️ Project: (topic, word count)`, {
+    bot.sendMessage(chatId, `Freelance writing services—your words, our craft! Share details: Topic? Word count? Style (e.g., SEO, creative)? We'll deliver polished work for Ksh 2,500.`, {
       parse_mode: "Markdown",
       reply_markup: getFAQButtons(),
     });
     return;
   }
 
-  // Graphic Design
-  if (data.startsWith("service_") && state.service.subFlow === "graphic_design") {
-    bot.sendMessage(chatId, `🎨 Design type:`, {
+  // Graphic Design: Narrow to Type
+  if (state.service?.subFlow === "graphic_design") {
+    bot.sendMessage(chatId, `Graphic design—visuals that captivate! What type suits your project? We'll refine based on your vision.`, {
       parse_mode: "Markdown",
       reply_markup: { inline_keyboard: SUB_FLOWS.graphic_design.types },
     });
@@ -528,14 +530,14 @@ bot.on("callback_query", async (query) => {
     return;
   }
   if (data.startsWith("graphic_")) {
-    state.graphicType = data.split("_")[1];
+    state.graphicType = data.split("_")[1].toUpperCase();
     state.finalPrice = 3500;
-    bot.sendMessage(chatId, `🎨 ${state.graphicType.toUpperCase()}\n\nKsh 3,500. Proceed?`, {
+    bot.sendMessage(chatId, `${state.graphicType} design—tailored just for you at Ksh 3,500. Colors, style preferences? (Tell me more, or proceed.)`, {
       parse_mode: "Markdown",
       reply_markup: {
         inline_keyboard: [
-          [{ text: "💳 Pay", callback_data: "choosePayment" }],
-          [{ text: "🔙 Back", callback_data: "backToService" }],
+          [{ text: "💳 Design It", callback_data: "choosePayment" }],
+          [{ text: "🔙 Refine", callback_data: "backToService" }],
         ],
       },
     });
@@ -543,9 +545,9 @@ bot.on("callback_query", async (query) => {
     return;
   }
 
-  // Social Media
-  if (data.startsWith("service_") && state.service.subFlow === "social_media") {
-    bot.sendMessage(chatId, `📈 Platform:`, {
+  // Social Media: Narrow to Platform
+  if (state.service?.subFlow === "social_media") {
+    bot.sendMessage(chatId, `Social media management—grow your audience effortlessly! Which platform to focus on? We'll strategize content and engagement.`, {
       parse_mode: "Markdown",
       reply_markup: { inline_keyboard: SUB_FLOWS.social_media.platforms },
     });
@@ -553,14 +555,14 @@ bot.on("callback_query", async (query) => {
     return;
   }
   if (data.startsWith("social_")) {
-    state.socialPlatform = data.split("_")[1];
+    state.socialPlatform = data.split("_")[1].toUpperCase();
     state.finalPrice = 4000;
-    bot.sendMessage(chatId, `📈 ${state.socialPlatform.toUpperCase()}\n\nKsh 4,000. Proceed?`, {
+    bot.sendMessage(chatId, `${state.socialPlatform} management for Ksh 4,000/month. Goals like followers or sales? Let's amplify your brand!`, {
       parse_mode: "Markdown",
       reply_markup: {
         inline_keyboard: [
-          [{ text: "💳 Pay", callback_data: "choosePayment" }],
-          [{ text: "🔙 Back", callback_data: "backToService" }],
+          [{ text: "💳 Launch Campaign", callback_data: "choosePayment" }],
+          [{ text: "🔙 Switch Platform", callback_data: "backToService" }],
         ],
       },
     });
@@ -568,14 +570,14 @@ bot.on("callback_query", async (query) => {
     return;
   }
 
-  // Payment Flow
+  // Payment Flow: Conversational
   if (data === "choosePayment") {
-    bot.sendMessage(chatId, `${state.service.name}\n\nTotal: Ksh ${state.finalPrice}\n\nMethod:`, {
+    bot.sendMessage(chatId, `Wonderful! For ${state.service.name} at Ksh ${state.finalPrice}, how would you like to pay? We're secure and quick.`, {
       parse_mode: "Markdown",
       reply_markup: {
         inline_keyboard: [
-          [{ text: "📲 M-Pesa", callback_data: "pay_mpesa" }],
-          [{ text: "🪙 Crypto", callback_data: "pay_crypto" }],
+          [{ text: "📲 M-Pesa (Easy PIN)", callback_data: "pay_mpesa" }],
+          [{ text: "🪙 Crypto (Flexible)", callback_data: "pay_crypto" }],
         ],
       },
     });
@@ -584,7 +586,7 @@ bot.on("callback_query", async (query) => {
   }
   if (data === "pay_mpesa") {
     state.step = "enterPhone";
-    bot.sendMessage(chatId, `📱 M-Pesa: Enter 2547XXXXXXXX\n\n${state.service.name}: Ksh ${state.finalPrice}`, {
+    bot.sendMessage(chatId, `M-Pesa it is—super convenient! Enter your number: 2547XXXXXXXX. We'll send the prompt right away for ${state.service.name}.`, {
       parse_mode: "Markdown",
       reply_markup: getFAQButtons(),
     });
@@ -592,7 +594,7 @@ bot.on("callback_query", async (query) => {
   }
   if (data === "pay_crypto") {
     state.step = "uploadProof";
-    bot.sendMessage(chatId, `🪙 Crypto: Send Ksh ${state.finalPrice} equiv.\n\nBTC: 1ABCyourBTCwallet\nUSDT: TGyourTRC20wallet\n\nUpload proof:`, {
+    bot.sendMessage(chatId, `Crypto works great for global payments! Send Ksh ${state.finalPrice} equivalent to BTC: 1ABCyourBTCwallet or USDT: TGyourTRC20wallet. Then upload the proof—I'll confirm fast.`, {
       parse_mode: "Markdown",
       reply_markup: getFAQButtons(),
     });
@@ -605,19 +607,19 @@ bot.on("callback_query", async (query) => {
   }
   if (data === "changePhone") {
     state.step = "enterPhone";
-    bot.sendMessage(chatId, `📱 Re-enter: 2547XXXXXXXX`, { parse_mode: "Markdown" });
+    bot.sendMessage(chatId, `No problem—let's get the right number. Enter: 2547XXXXXXXX for the prompt.`, { parse_mode: "Markdown" });
     return;
   }
 });
 
-// ✅ Service Selection Handler
+// ✅ Service Selection Handler: Initiates Narrowing Conversation
 function handleServiceSelection(chatId, serviceId) {
   const subFlow = services.find(s => s.id === serviceId)?.subFlow;
   const state = userState.get(chatId);
 
   switch (subFlow) {
     case "transcription_training":
-      bot.sendMessage(chatId, `📝 Platform:`, {
+      bot.sendMessage(chatId, `Diving into transcription training—great for steady income! Which platform excites you most? Each has unique tips we'll cover.`, {
         parse_mode: "Markdown",
         reply_markup: { inline_keyboard: SUB_FLOWS[subFlow].options },
       });
@@ -625,7 +627,7 @@ function handleServiceSelection(chatId, serviceId) {
       break;
 
     case "transcription_link":
-      bot.sendMessage(chatId, `🔗 Link type:`, {
+      bot.sendMessage(chatId, `Application links to skip the queue—smart strategy! Private exclusive or public? Private gives referral perks.`, {
         parse_mode: "Markdown",
         reply_markup: { inline_keyboard: SUB_FLOWS[subFlow].initialOptions },
       });
@@ -633,7 +635,7 @@ function handleServiceSelection(chatId, serviceId) {
       break;
 
     case "remote_ai_jobs":
-      bot.sendMessage(chatId, `🌍 Job:`, {
+      bot.sendMessage(chatId, `Remote AI jobs training—future-proof your career! Browse these opportunities; we'll train you for success in your pick.`, {
         parse_mode: "Markdown",
         reply_markup: { inline_keyboard: SUB_FLOWS[subFlow].options },
       });
@@ -641,7 +643,7 @@ function handleServiceSelection(chatId, serviceId) {
       break;
 
     case "proxies":
-      bot.sendMessage(chatId, `🛡️ Country:`, {
+      bot.sendMessage(chatId, `Proxies for global access—essential for freelancing! Select your country; we'll match the best speed and security.`, {
         parse_mode: "Markdown",
         reply_markup: { inline_keyboard: SUB_FLOWS[subFlow].countries },
       });
@@ -650,14 +652,14 @@ function handleServiceSelection(chatId, serviceId) {
 
     case "fullu":
       state.step = "fulluQuantity";
-      bot.sendMessage(chatId, `📦 How many Fullu? (1-1000)\n\nKsh 150 each.`, {
+      bot.sendMessage(chatId, `Fullu packs—versatile tools! How many do you need (1-1000)? At Ksh 150 each, it's scalable for your projects.`, {
         parse_mode: "Markdown",
         reply_markup: getFAQButtons(),
       });
       break;
 
     case "usa_numbers":
-      bot.sendMessage(chatId, `📞 Purpose:`, {
+      bot.sendMessage(chatId, `USA numbers for seamless verifications—bypass restrictions! For WhatsApp or other? Let's get you set up.`, {
         parse_mode: "Markdown",
         reply_markup: { inline_keyboard: SUB_FLOWS[subFlow].options },
       });
@@ -665,11 +667,11 @@ function handleServiceSelection(chatId, serviceId) {
       break;
 
     case "remote_work_apply":
-      bot.sendMessage(chatId, `📚 Remote Apply Training\n\nKsh 1,800. Proceed?`, {
+      bot.sendMessage(chatId, `Remote work application training—land that dream gig! Step-by-step guidance for Ksh 1,800. Any specific platforms in mind?`, {
         parse_mode: "Markdown",
         reply_markup: {
           inline_keyboard: [
-            [{ text: "💳 Pay", callback_data: "choosePayment" }],
+            [{ text: "💳 Get the Guide", callback_data: "choosePayment" }],
             [{ text: "🔙 Back", callback_data: "backToService" }],
           ],
         },
@@ -678,24 +680,24 @@ function handleServiceSelection(chatId, serviceId) {
       break;
 
     default:
-      // Other services handled in callback
-      state.step = "confirmOrder";
-      bot.sendMessage(chatId, `${state.service.name}\n\nKsh ${state.finalPrice}. Proceed?`, {
+      // Fallback for direct services
+      bot.sendMessage(chatId, `Solid pick on ${state.service.name} for Ksh ${state.finalPrice}. This includes full support—any questions before we proceed?`, {
         parse_mode: "Markdown",
         reply_markup: {
           inline_keyboard: [
-            [{ text: "💳 Pay", callback_data: "choosePayment" }],
-            [{ text: "🔙 Back", callback_data: "backToService" }],
+            [{ text: "💳 Continue", callback_data: "choosePayment" }],
+            [{ text: "🔙 Main Menu", callback_data: "restart_menu" }],
           ],
         },
       });
+      state.step = "confirmOrder";
       break;
   }
 }
 
-// ✅ Enhanced STK Push
+// ✅ Enhanced STK Push with Conversational Feedback
 async function sendStkPush(chatId, phone, state) {
-  const loadingMsg = await bot.sendMessage(chatId, `🔄 Sending prompt to ${phone}...\n\nKsh ${state.finalPrice}`, { parse_mode: "Markdown" });
+  const loadingMsg = await bot.sendMessage(chatId, `Sending the secure prompt to ${phone} now... Check your M-Pesa app and enter the PIN. You're one step away from ${state.service.name}!`, { parse_mode: "Markdown" });
 
   try {
     const authResponse = await axios.get(
@@ -726,7 +728,7 @@ async function sendStkPush(chatId, phone, state) {
 
     if (stkResponse.data.ResponseCode === "0") {
       state.transactionId = stkResponse.data.CheckoutRequestID;
-      await bot.editMessageText(`✅ Prompt sent. Enter PIN.`, {
+      await bot.editMessageText(`Prompt sent successfully! Enter your PIN to complete. I'll notify you once confirmed—exciting times ahead! 🚀`, {
         chat_id: chatId,
         message_id: loadingMsg.message_id,
         parse_mode: "Markdown",
@@ -737,11 +739,17 @@ async function sendStkPush(chatId, phone, state) {
     }
   } catch (err) {
     console.error("STK Error:", err);
-    await bot.editMessageText(`❌ Failed. Contact support.`, {
+    await bot.editMessageText(`Oops, prompt send failed. Let's try again or switch to crypto. Your satisfaction matters!`, {
       chat_id: chatId,
       message_id: loadingMsg.message_id,
       parse_mode: "Markdown",
-      reply_markup: { inline_keyboard: [[{ text: "📞 Support", url: "https://t.me/Luqman2893" }]] },
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "🔄 Retry M-Pesa", callback_data: "pay_mpesa" }],
+          [{ text: "🪙 Switch to Crypto", callback_data: "pay_crypto" }],
+          [{ text: "📞 Support", url: "https://t.me/Luqman2893" }],
+        ],
+      },
     });
   }
 }
@@ -760,9 +768,9 @@ app.post("/callback", async (req, res) => {
 
     for (let [chatId, state] of userState.entries()) {
       if (state.transactionId === transactionId) {
-        await bot.sendMessage(chatId, `✅ Success! Ksh ${amount}\nReceipt: ${receipt}\n\nDelivery in 24h.`, {
+        await bot.sendMessage(chatId, `🎉 Payment confirmed! Ksh ${amount} received (Receipt: ${receipt}). Your ${state.service.name} is on the way—expect details in 24h. Thanks for choosing us; you're all set! 🌟`, {
           parse_mode: "Markdown",
-          reply_markup: { inline_keyboard: [[{ text: "🏠 Menu", callback_data: "restart_menu" }]] },
+          reply_markup: { inline_keyboard: [[{ text: "🏠 Explore More", callback_data: "restart_menu" }]] },
         });
         userState.delete(chatId);
         break;
@@ -770,7 +778,7 @@ app.post("/callback", async (req, res) => {
     }
   } else {
     for (let [chatId] of userState.entries()) {
-      bot.sendMessage(chatId, `⚠️ Payment cancelled. Retry?`, {
+      bot.sendMessage(chatId, `⚠️ Payment not completed yet. No rush—retry or chat with support. We're here to help! 😊`, {
         parse_mode: "Markdown",
         reply_markup: { inline_keyboard: [[{ text: "🔄 Retry", callback_data: "restart_menu" }]] },
       }).catch(err => console.error(`Send error:`, err));
@@ -780,9 +788,12 @@ app.post("/callback", async (req, res) => {
   res.json({ ResultCode: 0, ResultDesc: "Accepted" });
 });
 
-// ✅ Start Command
+// ✅ Start Command: Conversational Welcome
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
   userState.delete(chatId);
+  bot.sendMessage(chatId, `Hello! 👋 Welcome back to Echo Labs—your partner in freelancing success. What service can I help you with today? Let's make progress!`, {
+    parse_mode: "Markdown",
+  });
   showMainMenu(chatId);
 });
