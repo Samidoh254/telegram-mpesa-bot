@@ -137,7 +137,7 @@ function showMainMenu(chatId) {
 
   bot.sendMessage(
     chatId,
-    "🌟 *Welcome to Echo Labs Professional Services* 🌟\n\nExplore our curated offerings for freelancers. Each service is designed for efficiency and results.\n\n*Payments: Secure M-Pesa or Crypto.*",
+    "🌟 *Echo Labs Services* 🌟\n\nSelect a category below for tailored solutions.\n\n*Pro Tip: All transactions are encrypted.*",
     {
       parse_mode: "Markdown",
       reply_markup: { inline_keyboard: buttons },
@@ -156,14 +156,13 @@ bot.on("message", (msg) => {
   // Global "Start" restart anywhere
   if (text === "start") {
     userState.delete(chatId);
-    bot.sendMessage(chatId, "🔄 Restarting your session. Let's begin fresh—what service interests you today?", { parse_mode: "Markdown" });
     showMainMenu(chatId);
     return;
   }
 
   // Handle photo uploads for crypto proof
   if (msg.photo && userState.get(chatId)?.step === "uploadProof") {
-    bot.sendMessage(chatId, "📸 Transaction proof received. Our team will verify and deliver your service promptly. Thank you for your business!", {
+    bot.sendMessage(chatId, "📸 Proof uploaded. Processing verification—expect confirmation soon.", {
       parse_mode: "Markdown",
       reply_markup: getFAQButtons(),
     });
@@ -177,24 +176,22 @@ bot.on("message", (msg) => {
     return;
   }
 
-  // Specific step validations with professional tone
+  // Specific step validations with concise professional tone
   switch (state.step) {
     case "enterPhone":
       if (/^2547\d{8}$/.test(text)) {
         state.phone = text;
-        bot.sendMessage(chatId, `📱 Number confirmed: ${text}. Proceeding to generate your secure payment prompt.`, {
+        bot.sendMessage(chatId, `📱 Verified: ${text}.`, {
           parse_mode: "Markdown",
           reply_markup: {
             inline_keyboard: [
-              [{ text: "✅ Authorize Prompt", callback_data: `confirmPhone_${text}` }],
-              [{ text: "✏️ Update Number", callback_data: "changePhone" }],
+              [{ text: "✅ Send Prompt", callback_data: `confirmPhone_${text}` }],
+              [{ text: "✏️ Edit", callback_data: "changePhone" }],
             ],
           },
         });
       } else if (text !== "start") {
-        bot.sendMessage(chatId, "⚠️ Invalid format detected. Please provide a valid Kenyan M-Pesa number in the format 2547XXXXXXXX. We're here to assist—try again.", {
-          parse_mode: "Markdown",
-        });
+        bot.sendMessage(chatId, "⚠️ Invalid. Use: 2547XXXXXXXX", { parse_mode: "Markdown" });
       }
       break;
 
@@ -203,32 +200,30 @@ bot.on("message", (msg) => {
       if (qty >= 1 && qty <= 1000) {
         state.quantity = qty;
         state.finalPrice = qty * 150;
-        bot.sendMessage(chatId, `🧾 Order summary: ${qty} Fullu units at Ksh 150 each, totaling Ksh ${state.finalPrice}. This configuration suits your requirements.`, {
+        bot.sendMessage(chatId, `🧾 Total: Ksh ${state.finalPrice}`, {
           parse_mode: "Markdown",
           reply_markup: {
             inline_keyboard: [
-              [{ text: "💳 Finalize Payment", callback_data: "choosePayment" }],
-              [{ text: "🔙 Modify Quantity", callback_data: "backToService" }],
+              [{ text: "💳 Pay", callback_data: "choosePayment" }],
+              [{ text: "🔙 Back", callback_data: "backToService" }],
             ],
           },
         });
         state.step = "confirmOrder";
       } else if (text !== "start") {
-        bot.sendMessage(chatId, "⚠️ Quantity out of range. Specify a value between 1 and 1000. Precision ensures accurate fulfillment—please retry.", {
-          parse_mode: "Markdown",
-        });
+        bot.sendMessage(chatId, "⚠️ Enter 1-1000", { parse_mode: "Markdown" });
       }
       break;
 
     case "usaOtherCode":
       state.codeRequest = text;
       state.finalPrice = 150;
-      bot.sendMessage(chatId, `🔑 Verified request: "${text}". Provisioning a dedicated USA number for this purpose at Ksh 150.`, {
+      bot.sendMessage(chatId, `🔑 Set for ${text}. Ksh 150.`, {
         parse_mode: "Markdown",
         reply_markup: {
           inline_keyboard: [
-            [{ text: "💳 Process Order", callback_data: "choosePayment" }],
-            [{ text: "🔙 Revise Request", callback_data: "backToService" }],
+            [{ text: "💳 Pay", callback_data: "choosePayment" }],
+            [{ text: "🔙 Back", callback_data: "backToService" }],
           ],
         },
       });
@@ -237,12 +232,12 @@ bot.on("message", (msg) => {
 
     case "websiteDetails":
       state.websiteDetails = text;
-      bot.sendMessage(chatId, `🌐 Project specifications noted: ${text}. Estimated development cost: Ksh 10,000. This aligns with professional standards.`, {
+      bot.sendMessage(chatId, `🌐 ${text}. Ksh 10,000.`, {
         parse_mode: "Markdown",
         reply_markup: {
           inline_keyboard: [
-            [{ text: "💳 Initiate Development", callback_data: "choosePayment" }],
-            [{ text: "🔙 Refine Specifications", callback_data: "backToService" }],
+            [{ text: "💳 Pay", callback_data: "choosePayment" }],
+            [{ text: "🔙 Back", callback_data: "backToService" }],
           ],
         },
       });
@@ -251,12 +246,12 @@ bot.on("message", (msg) => {
 
     case "botDetails":
       state.botDetails = text;
-      bot.sendMessage(chatId, `🤖 Bot requirements documented: ${text}. Custom build priced at Ksh 15,000. Ready for execution.`, {
+      bot.sendMessage(chatId, `🤖 ${text}. Ksh 15,000.`, {
         parse_mode: "Markdown",
         reply_markup: {
           inline_keyboard: [
-            [{ text: "💳 Commence Build", callback_data: "choosePayment" }],
-            [{ text: "🔙 Update Requirements", callback_data: "backToService" }],
+            [{ text: "💳 Pay", callback_data: "choosePayment" }],
+            [{ text: "🔙 Back", callback_data: "backToService" }],
           ],
         },
       });
@@ -265,11 +260,11 @@ bot.on("message", (msg) => {
 
     case "bmCredentials":
       state.bmCredentials = text;
-      bot.sendMessage(chatId, `🔒 Credentials securely received. BM verification process at Ksh 5,000. Confidentiality assured.`, {
+      bot.sendMessage(chatId, `🔒 Received. Ksh 5,000.`, {
         parse_mode: "Markdown",
         reply_markup: {
           inline_keyboard: [
-            [{ text: "💳 Authorize Verification", callback_data: "choosePayment" }],
+            [{ text: "💳 Pay", callback_data: "choosePayment" }],
             [{ text: "🔙 Back", callback_data: "backToService" }],
           ],
         },
@@ -280,12 +275,12 @@ bot.on("message", (msg) => {
     case "writingDetails":
       state.writingDetails = text;
       state.finalPrice = 2500;
-      bot.sendMessage(chatId, `✍️ Writing brief confirmed: ${text}. Professional delivery for Ksh 2,500.`, {
+      bot.sendMessage(chatId, `✍️ ${text}. Ksh 2,500.`, {
         parse_mode: "Markdown",
         reply_markup: {
           inline_keyboard: [
-            [{ text: "💳 Assign Writer", callback_data: "choosePayment" }],
-            [{ text: "🔙 Edit Brief", callback_data: "backToService" }],
+            [{ text: "💳 Pay", callback_data: "choosePayment" }],
+            [{ text: "🔙 Back", callback_data: "backToService" }],
           ],
         },
       });
@@ -293,17 +288,12 @@ bot.on("message", (msg) => {
       break;
 
     default:
-      // Invalid input → Main Menu with professional redirect
-      bot.sendMessage(chatId, "Input not recognized. Returning to the main menu for clarity. Which service shall we pursue?", {
-        parse_mode: "Markdown",
-        reply_markup: getFAQButtons(),
-      });
       showMainMenu(chatId);
       break;
   }
 });
 
-// ✅ Enhanced Button Handler: Professional Flows with Researched Examples
+// ✅ Enhanced Button Handler: Direct Buttons After Selection
 bot.on("callback_query", async (query) => {
   const chatId = query.message.chat.id;
   const data = query.data;
@@ -321,14 +311,14 @@ bot.on("callback_query", async (query) => {
     return;
   }
   if (data === "show_faq") {
-    bot.sendMessage(chatId, "❓ *Professional FAQs*\n\n💳 *Payment Options:* M-Pesa for instant local processing; Crypto for global flexibility.\n⏱️ *Turnaround:* 24-48 hours standard.\n🔒 *Compliance:* Full GDPR/HIPAA adherence.\n\nFurther inquiries welcome.", {
+    bot.sendMessage(chatId, "❓ *FAQs*\n💳 Pay: M-Pesa or Crypto.\n⏱️ Delivery: 24-48h.\n🔒 Secure.", {
       parse_mode: "Markdown",
       reply_markup: getFAQButtons(),
     });
     return;
   }
   if (data === "faq_payment") {
-    bot.sendMessage(chatId, "💳 *Payment Protocol*\n\n📲 *M-Pesa:* Prompt-based PIN entry for seamless authorization.\n🪙 *Crypto:* Blockchain-verified transfers to designated wallets, followed by proof upload.\n\nEfficiency and security prioritized.", {
+    bot.sendMessage(chatId, "💳 M-Pesa: PIN prompt.\nCrypto: Upload proof.", {
       parse_mode: "Markdown",
       reply_markup: getFAQButtons(),
     });
@@ -339,7 +329,7 @@ bot.on("callback_query", async (query) => {
     return;
   }
 
-  // Service Selection: Professional Intro + Buttons
+  // Service Selection: Direct to Sub-Buttons
   if (data.startsWith("service_")) {
     const serviceId = parseInt(data.split("_")[1]);
     const service = services.find((s) => s.id === serviceId);
@@ -349,41 +339,38 @@ bot.on("callback_query", async (query) => {
     state.serviceId = serviceId;
     state.finalPrice = service.price || 0;
 
-    bot.sendMessage(chatId, `Selected: ${service.name}. This service equips freelancers with industry-leading tools and knowledge. Proceed to customize your selection below.`, {
-      parse_mode: "Markdown",
-    });
     handleServiceSelection(chatId, serviceId);
     return;
   }
 
-  // Transcription Training: Buttons First, Then Researched Details on Click
+  // Transcription Training: Direct to Details on Click
   if (data.startsWith("trans_")) {
     const platform = data.split("_")[1];
     let description = "";
     switch (platform) {
       case "rev":
-        description = "Rev specializes in high-accuracy human and AI-assisted transcription for freelancers. Examples: Podcast transcripts, legal depositions, or video captions—earn up to $1.50/minute with flexible hours.";
+        description = "Rev: Human/AI transcription. Up to $1.50/min. Podcasts, legal, videos.";
         break;
       case "gotranscript":
-        description = "GoTranscript offers 99.4% accurate 100% human transcription in 40+ languages. Ideal for freelancers handling academic papers, interviews, or subtitles—rates from $0.60/minute with global demand.";
+        description = "GoTranscript: 100% human, 40+ languages. $0.60/min. Academic, interviews.";
         break;
       case "verbit":
-        description = "Verbit combines AI with human expertise for media transcription and captioning. Freelancers thrive on live broadcasts, films, or e-learning content—fast turnaround and hybrid model for efficiency.";
+        description = "Verbit: AI-human hybrid. Live broadcasts, films, e-learning.";
         break;
       case "aimedia":
-        description = "AI-Media focuses on accessible captioning and transcription for broadcasts and videos. Perfect for freelancers in subtitling, live events, or compliance work—emphasizes accuracy in diverse accents.";
+        description = "AI-Media: Captioning/subtitling. Videos, events, accents.";
         break;
       default:
-        description = "Platform-specific training for optimal performance.";
+        description = "Platform training.";
     }
     state.platform = platform;
     state.finalPrice = 1500;
-    bot.sendMessage(chatId, `${platform.toUpperCase()} Training Overview: ${description}\n\nThis tailored program enhances your skills for immediate application. Proceed professionally.`, {
+    bot.sendMessage(chatId, `${platform.toUpperCase()}: ${description}\nKsh 1,500.`, {
       parse_mode: "Markdown",
       reply_markup: {
         inline_keyboard: [
-          [{ text: "💳 Acquire Training", callback_data: "choosePayment" }],
-          [{ text: "🔙 Select Another Platform", callback_data: "backToService" }],
+          [{ text: "💳 Buy", callback_data: "choosePayment" }],
+          [{ text: "🔙 Back", callback_data: "backToService" }],
         ],
       },
     });
@@ -391,11 +378,11 @@ bot.on("callback_query", async (query) => {
     return;
   }
 
-  // Transcription Link: Buttons for Type, Then Accounts with Details
+  // Transcription Link: Type → Accounts
   if (data === "link_private" || data === "link_public") {
-    state.linkType = data === "link_private" ? "Private Exclusive" : "Public";
+    state.linkType = data === "link_private" ? "Private" : "Public";
     state.finalPrice = data === "link_private" ? 800 : 300;
-    bot.sendMessage(chatId, `${state.linkType} Application Links: Provides direct access to premium opportunities. Select your target platform for the customized link.`, {
+    bot.sendMessage(chatId, `${state.linkType} Link. Ksh ${state.finalPrice}. Choose platform:`, {
       parse_mode: "Markdown",
       reply_markup: { inline_keyboard: SUB_FLOWS.transcription_link.accounts },
     });
@@ -407,27 +394,27 @@ bot.on("callback_query", async (query) => {
     let description = "";
     switch (platform) {
       case "rev":
-        description = "Rev link: Access freelance transcription gigs with human/AI hybrid model—ideal for quick earnings on diverse audio.";
+        description = "Rev: Quick gigs on diverse audio.";
         break;
       case "gotranscript":
-        description = "GoTranscript link: Join for human-only transcription in multiple languages—suits detailed projects like research transcripts.";
+        description = "GoTranscript: Multilingual research.";
         break;
       case "verbit":
-        description = "Verbit link: Enter AI-enhanced captioning roles—focus on media and live content for broadcasters.";
+        description = "Verbit: Media captioning.";
         break;
       case "aimedia":
-        description = "AI-Media link: Secure positions in accessible transcription—specializing in subtitles for videos and events.";
+        description = "AI-Media: Video subtitles.";
         break;
       default:
-        description = "Platform-specific access.";
+        description = "Platform access.";
     }
     state.account = platform;
-    bot.sendMessage(chatId, `${state.linkType} for ${platform.toUpperCase()}: ${description}\n\nKsh ${state.finalPrice}. Instant activation post-payment.`, {
+    bot.sendMessage(chatId, `${state.linkType} for ${platform.toUpperCase()}: ${description}\nKsh ${state.finalPrice}.`, {
       parse_mode: "Markdown",
       reply_markup: {
         inline_keyboard: [
-          [{ text: "💳 Obtain Link", callback_data: "choosePayment" }],
-          [{ text: "🔙 Change Platform", callback_data: "backToService" }],
+          [{ text: "💳 Get Link", callback_data: "choosePayment" }],
+          [{ text: "🔙 Back", callback_data: "backToService" }],
         ],
       },
     });
@@ -435,48 +422,48 @@ bot.on("callback_query", async (query) => {
     return;
   }
 
-  // Remote AI Jobs: Buttons for Jobs, Then Researched Details
+  // Remote AI Jobs: Job → Details
   if (data.startsWith("ai_")) {
     const job = data.split("_")[1];
     let description = "";
     switch (job) {
       case "handshake":
-        description = "Handshake AI: Paid fellowship for AI model validation—no experience needed. Examples: Review AI responses for accuracy in career advice datasets.";
+        description = "Handshake AI: AI validation fellowship. Review responses for career data.";
         break;
       case "uber":
-        description = "Uber AI: Training roles in autonomous systems. Examples: Annotate driving data or evaluate NLP for ride-sharing queries.";
+        description = "Uber AI: Annotate driving/NLP data for ride systems.";
         break;
       case "evaluator":
-        description = "AI English Evaluator: Assess AI-generated writing. Examples: Rate essays for grammar, coherence in educational tools.";
+        description = "AI English Evaluator: Rate AI essays for grammar/coherence.";
         break;
       case "sigma":
-        description = "Sigma AI: Linguistic projects for English speakers. Examples: Validate translations or sentiment analysis in chatbots.";
+        description = "Sigma AI: Validate translations/sentiment in chatbots.";
         break;
       case "surge":
-        description = "Surge AI: Data annotation for advanced models. Examples: Label images/text for ethical AI training.";
+        description = "Surge AI: Label images/text for ethical AI.";
         break;
       case "rws":
-        description = "RWS Train AI: Freelance data tasks for AI improvement. Examples: Transcribe multilingual audio or tag entities.";
+        description = "RWS Train AI: Transcribe/tag multilingual entities.";
         break;
       case "welocalize":
-        description = "Welocalize: AI training via annotation. Examples: Categorize search results or moderate content.";
+        description = "Welocalize: Categorize search/moderate content.";
         break;
       case "playment":
-        description = "Playment: Gamified data labeling. Examples: Annotate videos for computer vision in gaming AI.";
+        description = "Playment: Annotate videos for gaming AI vision.";
         break;
       case "alignerr":
-        description = "Alignerr: Expert-led AI training. Examples: Refine voice models or evaluate domain-specific queries.";
+        description = "Alignerr: Refine voice models/domain queries.";
         break;
       default:
-        description = "Job-specific training.";
+        description = "Job training.";
     }
     state.job = job.replace(/_/g, ' ').toUpperCase();
-    bot.sendMessage(chatId, `${state.job} Training: ${description}\n\nKsh 2,000. Comprehensive preparation for remote success.`, {
+    bot.sendMessage(chatId, `${state.job}: ${description}\nKsh 2,000.`, {
       parse_mode: "Markdown",
       reply_markup: {
         inline_keyboard: [
-          [{ text: "💳 Enroll in Training", callback_data: "choosePayment" }],
-          [{ text: "🔙 Select Different Job", callback_data: "backToService" }],
+          [{ text: "💳 Enroll", callback_data: "choosePayment" }],
+          [{ text: "🔙 Back", callback_data: "backToService" }],
         ],
       },
     });
@@ -484,10 +471,10 @@ bot.on("callback_query", async (query) => {
     return;
   }
 
-  // Proxies: Country Buttons, Then Subscription
+  // Proxies: Country → Subscription
   if (data.startsWith("proxy_")) {
     state.country = data.split("_")[1].toUpperCase();
-    bot.sendMessage(chatId, `Proxies for ${state.country}: Enterprise-grade IP rotation for unrestricted access. Select duration for optimal coverage.`, {
+    bot.sendMessage(chatId, `${state.country} Proxy. Choose plan:`, {
       parse_mode: "Markdown",
       reply_markup: { inline_keyboard: SUB_FLOWS.proxies.subscriptions },
     });
@@ -497,12 +484,12 @@ bot.on("callback_query", async (query) => {
   if (data === "sub_monthly" || data === "sub_weekly") {
     state.subscription = data === "sub_monthly" ? "Monthly" : "Weekly";
     state.finalPrice = data === "sub_monthly" ? 2500 : 800;
-    bot.sendMessage(chatId, `${state.subscription} Subscription for ${state.country} Proxies: Unlimited bandwidth, 99.9% uptime. Ksh ${state.finalPrice}.`, {
+    bot.sendMessage(chatId, `${state.country} ${state.subscription}. Ksh ${state.finalPrice}.`, {
       parse_mode: "Markdown",
       reply_markup: {
         inline_keyboard: [
           [{ text: "💳 Subscribe", callback_data: "choosePayment" }],
-          [{ text: "🔙 Alter Subscription", callback_data: "backToService" }],
+          [{ text: "🔙 Back", callback_data: "backToService" }],
         ],
       },
     });
@@ -510,15 +497,15 @@ bot.on("callback_query", async (query) => {
     return;
   }
 
-  // USA Numbers: Purpose Buttons
+  // USA Numbers: Purpose
   if (data === "num_whatsapp") {
     state.numType = "WhatsApp";
     state.finalPrice = 1000;
-    bot.sendMessage(chatId, `USA Number for WhatsApp: VoIP-enabled for international verification. Ksh 1,000. Includes activation guide.`, {
+    bot.sendMessage(chatId, "WhatsApp Number. Ksh 1,000.", {
       parse_mode: "Markdown",
       reply_markup: {
         inline_keyboard: [
-          [{ text: "💳 Provision Number", callback_data: "choosePayment" }],
+          [{ text: "💳 Get", callback_data: "choosePayment" }],
           [{ text: "🔙 Back", callback_data: "backToService" }],
         ],
       },
@@ -528,17 +515,17 @@ bot.on("callback_query", async (query) => {
   }
   if (data === "num_other") {
     state.step = "usaOtherCode";
-    bot.sendMessage(chatId, `USA Number for Other Verifications: Versatile for SMS/voice codes. Specify the service (e.g., 'Gmail recovery') for tailored setup.`, {
+    bot.sendMessage(chatId, "Other Verifications. Specify service:", {
       parse_mode: "Markdown",
       reply_markup: getFAQButtons(),
     });
     return;
   }
 
-  // Other Services: Direct with Professional Confirm
+  // Other Services: Direct
   if (state.service?.subFlow === "website_dev") {
     state.step = "websiteDetails";
-    bot.sendMessage(chatId, `Website Development: Full-stack solutions from concept to launch. Provide details (e.g., features, design preferences) for a precise quote.`, {
+    bot.sendMessage(chatId, "Website Details. Describe:", {
       parse_mode: "Markdown",
       reply_markup: getFAQButtons(),
     });
@@ -547,7 +534,7 @@ bot.on("callback_query", async (query) => {
 
   if (state.service?.subFlow === "bot_dev") {
     state.step = "botDetails";
-    bot.sendMessage(chatId, `Bot Development: Custom automation tailored to your workflow. Describe functionality (e.g., integrations, triggers) for optimal design.`, {
+    bot.sendMessage(chatId, "Bot Details. Describe:", {
       parse_mode: "Markdown",
       reply_markup: getFAQButtons(),
     });
@@ -556,7 +543,7 @@ bot.on("callback_query", async (query) => {
 
   if (state.service?.subFlow === "bm_verification") {
     state.step = "bmCredentials";
-    bot.sendMessage(chatId, `BM Verification: Thorough account validation with compliance checks. Submit credentials securely for processing at Ksh 5,000.`, {
+    bot.sendMessage(chatId, "BM Credentials. Submit:", {
       parse_mode: "Markdown",
       reply_markup: getFAQButtons(),
     });
@@ -564,11 +551,11 @@ bot.on("callback_query", async (query) => {
   }
 
   if (state.service?.subFlow === "onlyfans_training") {
-    bot.sendMessage(chatId, `OnlyFans Training: Strategic guidance on profile optimization and revenue streams. Ksh 3,000. Professional roadmap included.`, {
+    bot.sendMessage(chatId, "OnlyFans Training. Ksh 3,000.", {
       parse_mode: "Markdown",
       reply_markup: {
         inline_keyboard: [
-          [{ text: "💳 Access Training", callback_data: "choosePayment" }],
+          [{ text: "💳 Buy", callback_data: "choosePayment" }],
           [{ text: "🔙 Back", callback_data: "backToService" }],
         ],
       },
@@ -579,7 +566,7 @@ bot.on("callback_query", async (query) => {
 
   if (state.service?.subFlow === "freelance_writing") {
     state.step = "writingDetails";
-    bot.sendMessage(chatId, `Freelance Writing: SEO-optimized, original content. Specify scope (topic, length, tone) for bespoke delivery at Ksh 2,500.`, {
+    bot.sendMessage(chatId, "Writing Details. Specify:", {
       parse_mode: "Markdown",
       reply_markup: getFAQButtons(),
     });
@@ -587,7 +574,7 @@ bot.on("callback_query", async (query) => {
   }
 
   if (state.service?.subFlow === "graphic_design") {
-    bot.sendMessage(chatId, `Graphic Design: Vector-based, brand-aligned visuals. Choose category for specialized options.`, {
+    bot.sendMessage(chatId, "Graphic Type. Select:", {
       parse_mode: "Markdown",
       reply_markup: { inline_keyboard: SUB_FLOWS.graphic_design.types },
     });
@@ -597,12 +584,12 @@ bot.on("callback_query", async (query) => {
   if (data.startsWith("graphic_")) {
     state.graphicType = data.split("_")[1].toUpperCase();
     state.finalPrice = 3500;
-    bot.sendMessage(chatId, `${state.graphicType} Design: High-resolution deliverables in Adobe formats. Ksh 3,500. Revisions included.`, {
+    bot.sendMessage(chatId, `${state.graphicType}. Ksh 3,500.`, {
       parse_mode: "Markdown",
       reply_markup: {
         inline_keyboard: [
-          [{ text: "💳 Commission Design", callback_data: "choosePayment" }],
-          [{ text: "🔙 Select Alternative", callback_data: "backToService" }],
+          [{ text: "💳 Order", callback_data: "choosePayment" }],
+          [{ text: "🔙 Back", callback_data: "backToService" }],
         ],
       },
     });
@@ -611,7 +598,7 @@ bot.on("callback_query", async (query) => {
   }
 
   if (state.service?.subFlow === "social_media") {
-    bot.sendMessage(chatId, `Social Media Management: Data-driven growth strategies. Select platform for targeted execution.`, {
+    bot.sendMessage(chatId, "Platform. Select:", {
       parse_mode: "Markdown",
       reply_markup: { inline_keyboard: SUB_FLOWS.social_media.platforms },
     });
@@ -621,12 +608,12 @@ bot.on("callback_query", async (query) => {
   if (data.startsWith("social_")) {
     state.socialPlatform = data.split("_")[1].toUpperCase();
     state.finalPrice = 4000;
-    bot.sendMessage(chatId, `${state.socialPlatform} Management: Analytics, content calendar, engagement protocols. Ksh 4,000/month.`, {
+    bot.sendMessage(chatId, `${state.socialPlatform}. Ksh 4,000.`, {
       parse_mode: "Markdown",
       reply_markup: {
         inline_keyboard: [
-          [{ text: "💳 Engage Services", callback_data: "choosePayment" }],
-          [{ text: "🔙 Platform Switch", callback_data: "backToService" }],
+          [{ text: "💳 Start", callback_data: "choosePayment" }],
+          [{ text: "🔙 Back", callback_data: "backToService" }],
         ],
       },
     });
@@ -634,9 +621,9 @@ bot.on("callback_query", async (query) => {
     return;
   }
 
-  // Payment Flow: Professional
+  // Payment Flow
   if (data === "choosePayment") {
-    bot.sendMessage(chatId, `Order Summary: ${state.service.name} at Ksh ${state.finalPrice}.\n\nSelect payment method for secure processing.`, {
+    bot.sendMessage(chatId, `${state.service.name}. Ksh ${state.finalPrice}. Pay via:`, {
       parse_mode: "Markdown",
       reply_markup: {
         inline_keyboard: [
@@ -650,7 +637,7 @@ bot.on("callback_query", async (query) => {
   }
   if (data === "pay_mpesa") {
     state.step = "enterPhone";
-    bot.sendMessage(chatId, `M-Pesa selected. Provide your registered number (2547XXXXXXXX) to receive the authorization prompt.`, {
+    bot.sendMessage(chatId, "M-Pesa. Enter number: 2547XXXXXXXX", {
       parse_mode: "Markdown",
       reply_markup: getFAQButtons(),
     });
@@ -658,7 +645,7 @@ bot.on("callback_query", async (query) => {
   }
   if (data === "pay_crypto") {
     state.step = "uploadProof";
-    bot.sendMessage(chatId, `Crypto selected. Transfer Ksh ${state.finalPrice} equivalent to BTC: 1ABCyourBTCwallet or USDT: TGyourTRC20wallet. Upload confirmation for validation.`, {
+    bot.sendMessage(chatId, "Crypto. Send Ksh ${state.finalPrice} equiv. Upload proof.", {
       parse_mode: "Markdown",
       reply_markup: getFAQButtons(),
     });
@@ -671,19 +658,19 @@ bot.on("callback_query", async (query) => {
   }
   if (data === "changePhone") {
     state.step = "enterPhone";
-    bot.sendMessage(chatId, `Number update requested. Enter the correct M-Pesa number: 2547XXXXXXXX.`, { parse_mode: "Markdown" });
+    bot.sendMessage(chatId, "Re-enter: 2547XXXXXXXX", { parse_mode: "Markdown" });
     return;
   }
 });
 
-// ✅ Service Selection Handler: Buttons with Professional Intro
+// ✅ Service Selection Handler: Direct Buttons
 function handleServiceSelection(chatId, serviceId) {
   const subFlow = services.find(s => s.id === serviceId)?.subFlow;
   const state = userState.get(chatId);
 
   switch (subFlow) {
     case "transcription_training":
-      bot.sendMessage(chatId, `Transcription Training: Elevate your skills in audio-to-text conversion for freelance excellence. Select platform for specialized curriculum.`, {
+      bot.sendMessage(chatId, "Transcription Platform. Select:", {
         parse_mode: "Markdown",
         reply_markup: { inline_keyboard: SUB_FLOWS[subFlow].options },
       });
@@ -691,7 +678,7 @@ function handleServiceSelection(chatId, serviceId) {
       break;
 
     case "transcription_link":
-      bot.sendMessage(chatId, `Application Links: Streamlined access to transcription opportunities. Choose link type for your strategic entry.`, {
+      bot.sendMessage(chatId, "Link Type. Select:", {
         parse_mode: "Markdown",
         reply_markup: { inline_keyboard: SUB_FLOWS[subFlow].initialOptions },
       });
@@ -699,7 +686,7 @@ function handleServiceSelection(chatId, serviceId) {
       break;
 
     case "remote_ai_jobs":
-      bot.sendMessage(chatId, `Remote AI Jobs Training: Prepare for high-demand roles in AI data handling. Browse programs for your expertise level.`, {
+      bot.sendMessage(chatId, "AI Job. Select:", {
         parse_mode: "Markdown",
         reply_markup: { inline_keyboard: SUB_FLOWS[subFlow].options },
       });
@@ -707,7 +694,7 @@ function handleServiceSelection(chatId, serviceId) {
       break;
 
     case "proxies":
-      bot.sendMessage(chatId, `Proxies: Secure, high-speed IP solutions for global freelancing. Choose location for region-specific performance.`, {
+      bot.sendMessage(chatId, "Proxy Country. Select:", {
         parse_mode: "Markdown",
         reply_markup: { inline_keyboard: SUB_FLOWS[subFlow].countries },
       });
@@ -716,14 +703,14 @@ function handleServiceSelection(chatId, serviceId) {
 
     case "fullu":
       state.step = "fulluQuantity";
-      bot.sendMessage(chatId, `Fullu Units: Scalable digital assets for verification and access. Indicate quantity (1-1000) for precise allocation.`, {
+      bot.sendMessage(chatId, "Fullu Quantity (1-1000):", {
         parse_mode: "Markdown",
         reply_markup: getFAQButtons(),
       });
       break;
 
     case "usa_numbers":
-      bot.sendMessage(chatId, `USA Numbers: Premium VoIP for international compliance. Specify purpose for optimized configuration.`, {
+      bot.sendMessage(chatId, "Number Purpose. Select:", {
         parse_mode: "Markdown",
         reply_markup: { inline_keyboard: SUB_FLOWS[subFlow].options },
       });
@@ -731,11 +718,11 @@ function handleServiceSelection(chatId, serviceId) {
       break;
 
     case "remote_work_apply":
-      bot.sendMessage(chatId, `Remote Work Application Training: Master resumes and interviews for global positions. Ksh 1,800.`, {
+      bot.sendMessage(chatId, "Remote Apply Training. Ksh 1,800.", {
         parse_mode: "Markdown",
         reply_markup: {
           inline_keyboard: [
-            [{ text: "💳 Purchase Guide", callback_data: "choosePayment" }],
+            [{ text: "💳 Buy", callback_data: "choosePayment" }],
             [{ text: "🔙 Back", callback_data: "backToService" }],
           ],
         },
@@ -744,12 +731,12 @@ function handleServiceSelection(chatId, serviceId) {
       break;
 
     default:
-      bot.sendMessage(chatId, `${state.service.name}: Premium service at Ksh ${state.finalPrice}. Full support provided.`, {
+      bot.sendMessage(chatId, `${state.service.name}. Ksh ${state.finalPrice}.`, {
         parse_mode: "Markdown",
         reply_markup: {
           inline_keyboard: [
-            [{ text: "💳 Proceed", callback_data: "choosePayment" }],
-            [{ text: "🔙 Menu", callback_data: "restart_menu" }],
+            [{ text: "💳 Pay", callback_data: "choosePayment" }],
+            [{ text: "🔙 Back", callback_data: "backToService" }],
           ],
         },
       });
@@ -760,7 +747,7 @@ function handleServiceSelection(chatId, serviceId) {
 
 // ✅ Enhanced STK Push
 async function sendStkPush(chatId, phone, state) {
-  const loadingMsg = await bot.sendMessage(chatId, `Generating M-Pesa prompt for ${phone}. Authorization required for Ksh ${state.finalPrice}.`, { parse_mode: "Markdown" });
+  const loadingMsg = await bot.sendMessage(chatId, `Prompt to ${phone}. Ksh ${state.finalPrice}.`, { parse_mode: "Markdown" });
 
   try {
     const authResponse = await axios.get(
@@ -791,7 +778,7 @@ async function sendStkPush(chatId, phone, state) {
 
     if (stkResponse.data.ResponseCode === "0") {
       state.transactionId = stkResponse.data.CheckoutRequestID;
-      await bot.editMessageText(`Prompt dispatched successfully. Complete authorization via PIN entry. Confirmation forthcoming.`, {
+      await bot.editMessageText(`Prompt sent. Enter PIN.`, {
         chat_id: chatId,
         message_id: loadingMsg.message_id,
         parse_mode: "Markdown",
@@ -802,15 +789,14 @@ async function sendStkPush(chatId, phone, state) {
     }
   } catch (err) {
     console.error("STK Error:", err);
-    await bot.editMessageText(`Prompt generation unsuccessful. Recommend retry or alternative method. Support available.`, {
+    await bot.editMessageText(`Failed. Retry?`, {
       chat_id: chatId,
       message_id: loadingMsg.message_id,
       parse_mode: "Markdown",
       reply_markup: {
         inline_keyboard: [
           [{ text: "🔄 Retry", callback_data: "pay_mpesa" }],
-          [{ text: "🪙 Crypto Alternative", callback_data: "pay_crypto" }],
-          [{ text: "📞 Assistance", url: "https://t.me/Luqman2893" }],
+          [{ text: "🪙 Crypto", callback_data: "pay_crypto" }],
         ],
       },
     });
@@ -831,9 +817,9 @@ app.post("/callback", async (req, res) => {
 
     for (let [chatId, state] of userState.entries()) {
       if (state.transactionId === transactionId) {
-        await bot.sendMessage(chatId, `Transaction validated: Ksh ${amount} (Receipt: ${receipt}). ${state.service.name} fulfillment initiated. Delivery within 24 hours.`, {
+        await bot.sendMessage(chatId, `Success. Ksh ${amount}. Receipt: ${receipt}. Delivery soon.`, {
           parse_mode: "Markdown",
-          reply_markup: { inline_keyboard: [[{ text: "🏠 Additional Services", callback_data: "restart_menu" }]] },
+          reply_markup: { inline_keyboard: [[{ text: "🏠 Menu", callback_data: "restart_menu" }]] },
         });
         userState.delete(chatId);
         break;
@@ -841,9 +827,9 @@ app.post("/callback", async (req, res) => {
     }
   } else {
     for (let [chatId] of userState.entries()) {
-      bot.sendMessage(chatId, `Authorization pending. Reattempt or consult support for alternatives.`, {
+      bot.sendMessage(chatId, `Cancelled. Retry?`, {
         parse_mode: "Markdown",
-        reply_markup: { inline_keyboard: [[{ text: "🔄 Reattempt", callback_data: "restart_menu" }]] },
+        reply_markup: { inline_keyboard: [[{ text: "🔄 Yes", callback_data: "restart_menu" }]] },
       }).catch(err => console.error(`Send error:`, err));
     }
   }
@@ -851,12 +837,9 @@ app.post("/callback", async (req, res) => {
   res.json({ ResultCode: 0, ResultDesc: "Accepted" });
 });
 
-// ✅ Start Command: Professional Welcome
+// ✅ Start Command
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
   userState.delete(chatId);
-  bot.sendMessage(chatId, `Greetings. Echo Labs delivers professional freelancing solutions. Explore services below to advance your objectives.`, {
-    parse_mode: "Markdown",
-  });
   showMainMenu(chatId);
 });
