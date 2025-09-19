@@ -785,24 +785,17 @@ async function sendStkPush(chatId, phone, state) {
     }
   } catch (err) {
     console.error("STK Push Error:", err);
-    await bot.editMessageText(`❌ *Payment Failed!* 🔄\n\nRetrying in 5s... Or choose another method.`, {
+    await bot.editMessageText(`❌ *Payment Failed!* 🔄\n\nContact support: @Luqman2893`, {
       chat_id: chatId,
       message_id: loadingMsg.message_id,
       parse_mode: "Markdown",
-      reply_markup: {
-        inline_keyboard: [
-          [{ text: "🔄 Retry M-Pesa", callback_data: "retryMpesa" }],
-          [{ text: "🪙 Switch to Crypto", callback_data: "pay_crypto" }],
-        ],
-      },
+      reply_markup: { inline_keyboard: [[{ text: "📞 Support", url: "https://t.me/Luqman2893" }]] },
     });
-    // Retry logic: setTimeout to recall sendStkPush after 5s
-    setTimeout(() => sendStkPush(chatId, phone, state), 5000);
   }
 }
 
-// ✅ Enhanced Callback Handler for M-Pesa
-app.post("/callback", (req, res) => {
+// ✅ Enhanced Callback Handler for M-Pesa (FIXED WITH ASYNC)
+app.post("/callback", async (req, res) => {  // <-- FIXED: Added 'async'
   console.log("📩 M-Pesa Callback:", JSON.stringify(req.body, null, 2));
   const callback = req.body.Body?.stkCallback;
 
@@ -825,12 +818,12 @@ app.post("/callback", (req, res) => {
       }
     }
   } else {
-    // Notify all pending (or match by time, but simple for now)
+    // Notify all pending (simple for now)
     for (let [chatId] of userState.entries()) {
-      await bot.sendMessage(chatId, `⚠️ *Payment Timed Out or Cancelled* 😔\n\nNo worries! Restart anytime.`, {
+      bot.sendMessage(chatId, `⚠️ *Payment Timed Out or Cancelled* 😔\n\nNo worries! Restart anytime.`, {  // <-- No await here
         parse_mode: "Markdown",
         reply_markup: { inline_keyboard: [[{ text: "🔄 Retry Order", callback_data: "restart_menu" }]] },
-      });
+      }).catch(err => console.error(`Failed to send failure message to ${chatId}:`, err));  // <-- Error handling
     }
   }
 
