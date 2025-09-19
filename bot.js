@@ -22,6 +22,13 @@ app.post(`/bot${process.env.TELEGRAM_BOT_TOKEN}`, (req, res) => {
   res.sendStatus(200);
 });
 
+// 🔹 Support Username for forwarding proofs
+const SUPPORT_USERNAME = '@Luqman2893'; // Forward crypto proofs here
+
+// 🔹 Crypto Wallets
+const BINANCE_WALLET = process.env.BINANCE_WALLET || 'your_binance_wallet_address_here'; // Replace or set in .env
+const TRUST_WALLET = process.env.TRUST_WALLET || 'your_trust_wallet_address_here'; // Replace or set in .env
+
 // 🔹 Services Catalog
 const services = [
   { id: 1, name: "📝 Transcription Training", price: 1500, subFlow: "transcription_training" },
@@ -46,6 +53,7 @@ const SUB_FLOWS = {
     options: [
       [{ text: "👤 Rev", callback_data: "trans_rev" }, { text: "📹 GoTranscript", callback_data: "trans_gotranscript" }],
       [{ text: "🔊 Verbit", callback_data: "trans_verbit" }, { text: "🎙️ AI-Media", callback_data: "trans_aimedia" }],
+      [{ text: "🔊 Echo Labs", callback_data: "trans_echo" }],
     ],
   },
   transcription_link: {
@@ -56,6 +64,7 @@ const SUB_FLOWS = {
     accounts: [
       [{ text: "👤 Rev", callback_data: "account_rev" }, { text: "📹 GoTranscript", callback_data: "account_gotranscript" }],
       [{ text: "🔊 Verbit", callback_data: "account_verbit" }, { text: "🎙️ AI-Media", callback_data: "account_aimedia" }],
+      [{ text: "🔊 Echo Labs", callback_data: "account_echo" }],
     ],
   },
   remote_ai_jobs: {
@@ -147,10 +156,21 @@ bot.on("message", (msg) => {
   }
 
   if (msg.photo && userState.get(chatId)?.step === "uploadProof") {
-    bot.sendMessage(chatId, "📸 Proof received. Verifying...", {
-      parse_mode: "Markdown",
-      reply_markup: getFAQButtons(),
-    });
+    const photoId = msg.photo[msg.photo.length - 1].file_id;
+    bot.forwardMessage(SUPPORT_USERNAME, chatId, msg.message_id)
+      .then(() => {
+        bot.sendMessage(chatId, "📸 Proof sent to support. Verifying payment—support will reach you soon.", {
+          parse_mode: "Markdown",
+          reply_markup: getFAQButtons(),
+        });
+      })
+      .catch(err => {
+        console.error("Forward error:", err);
+        bot.sendMessage(chatId, "⚠️ Error forwarding proof. Contact support.", {
+          parse_mode: "Markdown",
+          reply_markup: getFAQButtons(),
+        });
+      });
     userState.delete(chatId);
     return;
   }
@@ -301,7 +321,7 @@ bot.on("callback_query", async (query) => {
     return;
   }
   if (data === "faq_payment") {
-    bot.sendMessage(chatId, "💳 M-Pesa: PIN prompt.\nCrypto: Upload proof.", {
+    bot.sendMessage(chatId, "💳 M-Pesa: PIN prompt.\nCrypto: Use addresses below and upload proof.", {
       parse_mode: "Markdown",
       reply_markup: getFAQButtons(),
     });
@@ -342,6 +362,9 @@ bot.on("callback_query", async (query) => {
         break;
       case "aimedia":
         description = "AI-Media: Captioning. Videos, events.";
+        break;
+      case "echo":
+        description = "Echo Labs: Custom transcription tools.";
         break;
     }
     state.platform = platform;
@@ -385,6 +408,9 @@ bot.on("callback_query", async (query) => {
         break;
       case "aimedia":
         description = "AI-Media: Video subtitles.";
+        break;
+      case "echo":
+        description = "Echo Labs: Exclusive access.";
         break;
     }
     state.account = platform;
@@ -617,7 +643,7 @@ bot.on("callback_query", async (query) => {
   }
   if (data === "pay_crypto") {
     state.step = "uploadProof";
-    bot.sendMessage(chatId, `Send Ksh ${state.finalPrice} equiv. Upload proof.`, {
+    bot.sendMessage(chatId, `🪙 Pay Ksh ${state.finalPrice} to:\nBinance: ${BINANCE_WALLET}\nTrust Wallet: ${TRUST_WALLET}\nUpload proof (screenshot).`, {
       parse_mode: "Markdown",
       reply_markup: getFAQButtons(),
     });
