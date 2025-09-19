@@ -23,7 +23,7 @@ app.post(`/bot${process.env.TELEGRAM_BOT_TOKEN}`, (req, res) => {
 });
 
 // 🔹 Support Username for forwarding proofs
-const SUPPORT_USERNAME = '@Luqman2893'; // Forward crypto proofs here
+const SUPPORT_USERNAME = '@Luqman2893'; // Forward payment proofs here
 
 // 🔹 Crypto Wallets
 const BINANCE_WALLET = process.env.BINANCE_WALLET || 'your_binance_wallet_address_here'; // Replace or set in .env
@@ -50,7 +50,13 @@ const services = [
 // 🔹 Sub-flows with chained buttons (arrays for rows)
 const SUB_FLOWS = {
   transcription_training: {
-    options: [
+    levels: [
+      [{ text: "🆕 Beginner (Ksh 130/session)", callback_data: "level_beginner" }],
+      [{ text: "📈 Intermediate (Ksh 499/session)", callback_data: "level_intermediate" }],
+      [{ text: "💎 Expert (Ksh 800/session)", callback_data: "level_expert" }],
+      [{ text: "👑 VIP Exclusive (Ksh 2000)", callback_data: "level_vip" }],
+    ],
+    platforms: [
       [{ text: "👤 Rev", callback_data: "trans_rev" }, { text: "📹 GoTranscript", callback_data: "trans_gotranscript" }],
       [{ text: "🔊 Verbit", callback_data: "trans_verbit" }, { text: "🎙️ AI-Media", callback_data: "trans_aimedia" }],
       [{ text: "🔊 Echo Labs", callback_data: "trans_echo" }],
@@ -155,23 +161,32 @@ bot.on("message", (msg) => {
     return;
   }
 
-  if (msg.photo && userState.get(chatId)?.step === "uploadProof") {
+  if (msg.photo) {
     const photoId = msg.photo[msg.photo.length - 1].file_id;
-    bot.forwardMessage(SUPPORT_USERNAME, chatId, msg.message_id)
-      .then(() => {
-        bot.sendMessage(chatId, "📸 Proof sent to support. Verifying payment—support will reach you soon.", {
-          parse_mode: "Markdown",
-          reply_markup: getFAQButtons(),
+    // Check if it's a payment screenshot (basic heuristic: assume payment-related if from M-Pesa or crypto context)
+    const state = userState.get(chatId);
+    if (state?.step === "uploadProof" || state?.step === "confirmOrder") {
+      bot.forwardMessage(SUPPORT_USERNAME, chatId, msg.message_id)
+        .then(() => {
+          bot.sendMessage(chatId, "📸 Payment proof sent to support. Verifying—support will reach you soon.", {
+            parse_mode: "Markdown",
+            reply_markup: getFAQButtons(),
+          });
+        })
+        .catch(err => {
+          console.error("Forward error:", err);
+          bot.sendMessage(chatId, "⚠️ Error forwarding proof. Contact support.", {
+            parse_mode: "Markdown",
+            reply_markup: getFAQButtons(),
+          });
         });
-      })
-      .catch(err => {
-        console.error("Forward error:", err);
-        bot.sendMessage(chatId, "⚠️ Error forwarding proof. Contact support.", {
-          parse_mode: "Markdown",
-          reply_markup: getFAQButtons(),
-        });
+      userState.delete(chatId);
+    } else {
+      bot.sendMessage(chatId, "📷 Image received. This doesn’t appear to be a payment proof. Contact support if needed.", {
+        parse_mode: "Markdown",
+        reply_markup: getFAQButtons(),
       });
-    userState.delete(chatId);
+    }
     return;
   }
 
@@ -368,8 +383,7 @@ bot.on("callback_query", async (query) => {
         break;
     }
     state.platform = platform;
-    state.finalPrice = 1500;
-    bot.sendMessage(chatId, `${platform.toUpperCase()}: ${description}\nKsh 1,500`, {
+    bot.sendMessage(chatId, `${platform.toUpperCase()}: ${description}\nKsh ${state.finalPrice}/session`, {
       parse_mode: "Markdown",
       reply_markup: {
         inline_keyboard: [
@@ -424,6 +438,55 @@ bot.on("callback_query", async (query) => {
       },
     });
     state.step = "confirmOrder";
+    return;
+  }
+
+  // Transcription Training Levels
+  if (data.startsWith("level_")) {
+    const level = data.split("_")[1];
+    switch (level) {
+      case "beginner":
+        state.level = "Beginner";
+        state.finalPrice = 130;
+        bot.sendMessage(chatId, "Select Platform:", {
+          parse_mode: "Markdown",
+          reply_markup: { inline_keyboard: SUB_FLOWS.transcription_training.platforms },
+        });
+        state.step = "chooseTransPlatform";
+        break;
+      case "intermediate":
+        state.level = "Intermediate";
+        state.finalPrice = 499;
+        bot.sendMessage(chatId, "Select Platform:", {
+          parse_mode: "Markdown",
+          reply_markup: { inline_keyboard: SUB_FLOWS.transcription_training.platforms },
+        });
+        state.step = "chooseTransPlatform";
+        break;
+      case "expert":
+        state.level = "Expert";
+        state.finalPrice = 800;
+        bot.sendMessage(chatId, "Select Platform:", {
+          parse_mode: "Markdown",
+          reply_markup: { inline_keyboard: SUB_FLOWS.transcription_training.platforms },
+        });
+        state.step = "chooseTransPlatform";
+        break;
+      case "vip":
+        state.level = "VIP Exclusive";
+        state.finalPrice = 2000;
+        bot.sendMessage(chatId, "VIP Exclusive: Premium training.\nKsh 2000", {
+          parse_mode: "Markdown",
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: "💳 Pay", callback_data: "choosePayment" }],
+              [{ text: "🔙 Back", callback_data: "backToService" }],
+            ],
+          },
+        });
+        state.step = "confirmOrder";
+        break;
+    }
     return;
   }
 
@@ -621,7 +684,7 @@ bot.on("callback_query", async (query) => {
 
   // Payment Flow
   if (data === "choosePayment") {
-    bot.sendMessage(chatId, `${state.service.name}\nKsh ${state.finalPrice}`, {
+    bot.sendMessage(chatId, `${state.service.name} - ${state.level || ''}\nKsh ${state.finalPrice}`, {
       parse_mode: "Markdown",
       reply_markup: {
         inline_keyboard: [
@@ -668,11 +731,11 @@ function handleServiceSelection(chatId, serviceId) {
 
   switch (subFlow) {
     case "transcription_training":
-      bot.sendMessage(chatId, "Select Platform:", {
+      bot.sendMessage(chatId, "Select Your Level:", {
         parse_mode: "Markdown",
-        reply_markup: { inline_keyboard: SUB_FLOWS[subFlow].options },
+        reply_markup: { inline_keyboard: SUB_FLOWS[subFlow].levels },
       });
-      state.step = "chooseTransAccount";
+      state.step = "chooseLevel";
       break;
 
     case "transcription_link":
@@ -770,7 +833,7 @@ async function sendStkPush(chatId, phone, state) {
         PhoneNumber: phone,
         CallBackURL: process.env.MPESA_CALLBACK_URL,
         AccountReference: `EchoLabs_${Date.now()}`,
-        TransactionDesc: state.service.name,
+        TransactionDesc: `${state.service.name} - ${state.level || ''}`,
       },
       { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
     );
