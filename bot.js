@@ -6,13 +6,23 @@ const express = require("express");
 const app = express();
 app.use(express.json());
 
+// ✅ Start server for M-Pesa callbacks
 const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`✅ Server running on http://localhost:${PORT}`);
+});
 
-// ✅ Initialize bot in webhook mode
+// 🔹 Initialize Telegram Bot in webhook mode
 const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN);
-bot.setWebHook(`${process.env.WEBHOOK_URL}/bot${process.env.TELEGRAM_BOT_TOKEN}`);
+bot.setWebHook(`${process.env.RENDER_EXTERNAL_URL}/bot${process.env.TELEGRAM_BOT_TOKEN}`);
 
-// ✅ Services
+// 🔹 Telegram Webhook endpoint
+app.post(`/bot${process.env.TELEGRAM_BOT_TOKEN}`, (req, res) => {
+  bot.processUpdate(req.body);
+  res.sendStatus(200);
+});
+
+// 🔹 Services
 const services = [
   { id: 1, name: "📝 Training — Transcription", price: 1500 },
   { id: 2, name: "🔗 Transcription Application Link", price: 500 },
@@ -23,15 +33,16 @@ const services = [
   { id: 7, name: "📞 USA Numbers", price: 1000 },
 ];
 
-// Track user states
+// 🔹 Track user flow
 const userState = {};
 
-// ✅ Show main menu
+// ✅ Main Menu
 function showMainMenu(chatId) {
   const buttons = services.map((s) => [
     { text: `${s.name} — Ksh ${s.price}`, callback_data: `service_${s.id}` },
   ]);
 
+  // Extra buttons
   buttons.push([{ text: "💬 Contact Support", url: "https://t.me/Luqman2893" }]);
 
   bot.sendMessage(
@@ -46,15 +57,26 @@ function showMainMenu(chatId) {
   userState[chatId] = { step: "chooseService" };
 }
 
-// ✅ Handle text messages
+// ✅ Always reset to menu when random text is typed (unless expecting input)
 bot.on("message", (msg) => {
   const chatId = msg.chat.id;
 
+  // Handle photo uploads for payment proof
+  if (msg.photo && userState[chatId]?.step === "uploadProof") {
+    bot.sendMessage(chatId, "📩 Proof of payment received! ✅ Our support team will verify and get back to you shortly.");
+    showMainMenu(chatId);
+    return;
+  }
+
+  const text = msg.text?.trim();
+  if (!text) return;
+
   // If expecting phone input
   if (userState[chatId]?.step === "enterPhone") {
-    const text = msg.text.trim();
     if (/^2547\d{8}$/.test(text)) {
+      const service = userState[chatId].service;
       userState[chatId].phone = text;
+
       bot.sendMessage(chatId, `📱 You entered *${text}*.\nIs this correct?`, {
         parse_mode: "Markdown",
         reply_markup: {
@@ -65,16 +87,16 @@ bot.on("message", (msg) => {
         },
       });
     } else {
-      bot.sendMessage(chatId, "⚠️ Invalid number format! Use *2547XXXXXXXX*", {
+      bot.sendMessage(chatId, "⚠️ Invalid number format!\n\nPlease enter in format: *2547XXXXXXXX*", {
         parse_mode: "Markdown",
       });
     }
     return;
   }
 
-  // If expecting proof of payment but user typed text
-  if (userState[chatId]?.step === "awaitingProof" && msg.text) {
-    bot.sendMessage(chatId, "⚠️ Please upload a *screenshot/photo* of your payment as proof.");
+  // Reset for random messages
+  if (userState[chatId]?.step && userState[chatId].step !== "enterPhone") {
+    showMainMenu(chatId);
     return;
   }
 
@@ -83,37 +105,22 @@ bot.on("message", (msg) => {
   }
 });
 
-// ✅ Handle photos (proof of payment)
-bot.on("photo", async (msg) => {
-  const chatId = msg.chat.id;
-
-  if (userState[chatId]?.step === "awaitingProof") {
-    const photos = msg.photo;
-    const fileId = photos[photos.length - 1].file_id;
-
-    // Get file link
-    const fileUrl = await bot.getFileLink(fileId);
-
-    bot.sendMessage(chatId, "✅ Thank you! Your proof of payment has been received. Our support team will verify shortly.");
-
-    // Forward proof to admin
-    bot.sendMessage(
-      process.env.ADMIN_CHAT_ID,
-      `📩 Proof of payment received from user *${msg.from.username || msg.from.first_name}*.\n\nService: ${userState[chatId].service.name}\nAmount: ${userState[chatId].service.price} Ksh\n\nScreenshot: ${fileUrl}`,
-      { parse_mode: "Markdown" }
-    );
-
-    delete userState[chatId];
-  } else {
-    bot.sendMessage(chatId, "📸 I received your photo. If it’s proof of payment, please select a service first.");
-  }
-});
-
 // ✅ Handle button clicks
 bot.on("callback_query", async (query) => {
   const chatId = query.message.chat.id;
   const data = query.data;
 
+  if (data === "restart_yes") {
+    showMainMenu(chatId);
+    return;
+  }
+  if (data === "restart_no") {
+    bot.sendMessage(chatId, "👍 Okay! You can come back anytime.");
+    delete userState[chatId];
+    return;
+  }
+
+  // Service selection → ask payment method
   if (data.startsWith("service_")) {
     const serviceId = parseInt(data.split("_")[1]);
     const service = services.find((s) => s.id === serviceId);
@@ -134,26 +141,24 @@ bot.on("callback_query", async (query) => {
 
   if (data === "pay_mpesa") {
     userState[chatId].step = "enterPhone";
-    bot.sendMessage(chatId, "📱 Please enter your M-Pesa phone number (format: 2547XXXXXXXX)", {
+    bot.sendMessage(chatId, "📱 Please enter your M-Pesa phone number in format: *2547XXXXXXXX*", {
       parse_mode: "Markdown",
     });
   }
 
   if (data === "pay_crypto") {
-    userState[chatId].step = "awaitingProof";
+    userState[chatId].step = "uploadProof";
     bot.sendMessage(
       chatId,
-      "🪙 *Crypto Payments*\n\nSend the amount to:\n\n" +
-        "BTC: `1ABCyourBTCwallet`\n" +
-        "USDT (TRC20): `TGyourTRC20wallet`\n\n" +
-        "📸 After payment, upload a *screenshot* here as proof.",
+      "🪙 *Crypto Payments*\n\nSend the payment to:\n\nBTC: `1ABCyourBTCwallet`\nUSDT (TRC20): `TGyourTRC20wallet`\n\n📸 After sending, please upload a *screenshot* or *photo* of your transaction proof here.",
       { parse_mode: "Markdown" }
     );
   }
 
   if (data.startsWith("confirmPhone_")) {
-    const phone = data.split("_")[1];
+    const [_, phone] = data.split("_");
     const service = userState[chatId].service;
+
     sendStkPush(chatId, phone, service);
     delete userState[chatId];
   }
@@ -164,9 +169,9 @@ bot.on("callback_query", async (query) => {
   }
 });
 
-// ✅ Send STK Push
+// ✅ Function to send STK Push
 async function sendStkPush(chatId, phone, service) {
-  bot.sendMessage(chatId, `💳 Sending payment request of *Ksh ${service.price}* to *${phone}*...`, {
+  bot.sendMessage(chatId, `💳 Sending payment request of *Ksh ${service.price}* to *${phone}*...\nPlease check your phone and enter your M-Pesa PIN.`, {
     parse_mode: "Markdown",
   });
 
@@ -207,7 +212,7 @@ async function sendStkPush(chatId, phone, service) {
     );
 
     if (stkResponse.data.ResponseCode === "0") {
-      bot.sendMessage(chatId, `📲 STK Push sent! Enter your M-Pesa PIN to complete.`);
+      bot.sendMessage(chatId, "📲 STK Push sent!\n👉 Complete the payment on your phone.");
     } else {
       handleFailedPayment(chatId);
     }
@@ -217,9 +222,9 @@ async function sendStkPush(chatId, phone, service) {
   }
 }
 
-// ✅ Handle failed payment
+// ✅ Handle failed/canceled payment
 function handleFailedPayment(chatId) {
-  bot.sendMessage(chatId, "❌ Payment request failed. Do you want to try again?", {
+  bot.sendMessage(chatId, "❌ Payment request failed or canceled. Do you want to restart?", {
     reply_markup: {
       inline_keyboard: [
         [{ text: "🔄 Yes", callback_data: "restart_yes" }],
@@ -232,8 +237,21 @@ function handleFailedPayment(chatId) {
 // ✅ Callback for payment confirmation
 app.post("/callback", (req, res) => {
   console.log("📩 M-Pesa Callback:", JSON.stringify(req.body, null, 2));
+
+  const result = req.body?.Body?.stkCallback?.ResultCode;
+
+  if (result === 0) {
+    const chatId = Object.keys(userState)[0]; // in real system, map properly
+    if (chatId) {
+      bot.sendMessage(chatId, "✅ Payment received successfully!\n\nThank you for purchasing. Our support team will contact you shortly.", {
+        parse_mode: "Markdown",
+      });
+      showMainMenu(chatId);
+    }
+  } else {
+    const chatId = Object.keys(userState)[0];
+    if (chatId) handleFailedPayment(chatId);
+  }
+
   res.json({ status: "ok" });
 });
-
-// ✅ Start express server
-app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
