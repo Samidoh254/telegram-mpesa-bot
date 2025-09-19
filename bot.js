@@ -1,39 +1,18 @@
-// bot.js — complete Telegram + M-Pesa bot with WEBHOOK mode
 require("dotenv").config();
 const TelegramBot = require("node-telegram-bot-api");
 const axios = require("axios");
 const express = require("express");
 
-// ---------- Basic config ----------
-const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-const RENDER_URL = process.env.RENDER_EXTERNAL_URL; // e.g. https://telegram-mpesa-bot.onrender.com
-if (!TELEGRAM_TOKEN) {
-  console.error("ERROR: TELEGRAM_BOT_TOKEN is not set in env");
-  process.exit(1);
-}
-if (!RENDER_URL) {
-  console.error("ERROR: RENDER_EXTERNAL_URL is not set in env");
-  process.exit(1);
-}
-
 const app = express();
 app.use(express.json());
 
-// start Telegram bot in webhook mode (not polling)
-const bot = new TelegramBot(TELEGRAM_TOKEN, { webHook: true });
-bot.setWebHook(`${RENDER_URL}/webhook/${TELEGRAM_TOKEN}`);
-
 const PORT = process.env.PORT || 3000;
-const SUPPORT_USERNAME = process.env.SUPPORT_TELEGRAM_USERNAME || "Luqman2893"; // no @
-const SUPPORT_CHAT_ID = process.env.SUPPORT_CHAT_ID || null; // optional numeric id or channel @name
 
-// ---------- Webhook endpoint ----------
-app.post(`/webhook/${TELEGRAM_TOKEN}`, (req, res) => {
-  bot.processUpdate(req.body);
-  res.sendStatus(200);
-});
+// ✅ Initialize bot in webhook mode
+const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN);
+bot.setWebHook(`${process.env.WEBHOOK_URL}/bot${process.env.TELEGRAM_BOT_TOKEN}`);
 
-// ---------- Services list (edit prices here) ----------
+// ✅ Services
 const services = [
   { id: 1, name: "📝 Training — Transcription", price: 1500 },
   { id: 2, name: "🔗 Transcription Application Link", price: 500 },
@@ -44,187 +23,217 @@ const services = [
   { id: 7, name: "📞 USA Numbers", price: 1000 },
 ];
 
-// ---------- In-memory maps ----------
-const userState = {}; // chatId -> { step, service, phone, orderId }
-const pendingCheckout = {}; // checkoutRequestId -> { chatId, service, orderId }
+// Track user states
+const userState = {};
 
-// ---------- Helpers ----------
-function generateOrderId() {
-  return "ORD" + Date.now().toString().slice(-8);
-}
-
+// ✅ Show main menu
 function showMainMenu(chatId) {
-  const keyboard = services.map((s) => [
+  const buttons = services.map((s) => [
     { text: `${s.name} — Ksh ${s.price}`, callback_data: `service_${s.id}` },
   ]);
-  keyboard.push([
-    { text: "📋 View Services", callback_data: "view_services" },
-    { text: "💬 Contact Support", url: `https://t.me/${SUPPORT_USERNAME}` },
-  ]);
+
+  buttons.push([{ text: "💬 Contact Support", url: "https://t.me/Luqman2893" }]);
 
   bot.sendMessage(
     chatId,
-    "👋 *Welcome to Echo Labs Services Bot!*\n\nPlease select a service below:",
+    "👋 Welcome to *Echo Labs Services Bot*!\n\nPlease select a service below:",
     {
       parse_mode: "Markdown",
-      reply_markup: { inline_keyboard: keyboard },
+      reply_markup: { inline_keyboard: buttons },
     }
   );
 
   userState[chatId] = { step: "chooseService" };
 }
 
-function normalizePhone(input) {
-  if (!input) return null;
-  const digits = input.replace(/\D/g, "");
-  if (/^2547\d{8}$/.test(digits)) return digits;
-  if (/^07\d{8}$/.test(digits)) return "254" + digits.slice(1);
-  if (/^7\d{8}$/.test(digits)) return "254" + digits;
-  return null;
-}
-
-async function notifySupport(text, extra = {}) {
-  try {
-    if (SUPPORT_CHAT_ID) {
-      await bot.sendMessage(SUPPORT_CHAT_ID, text, extra);
-    } else {
-      await bot.sendMessage(`@${SUPPORT_USERNAME}`, text, extra);
-    }
-  } catch (err) {
-    console.warn("notifySupport failed:", err.message || err.toString());
-  }
-}
-
-// ---------- Command & message handlers ----------
+// ✅ Handle text messages
 bot.on("message", (msg) => {
   const chatId = msg.chat.id;
-  const text = (msg.text || "").trim();
 
+  // If expecting phone input
   if (userState[chatId]?.step === "enterPhone") {
-    if (!text) {
-      bot.sendMessage(chatId, "⚠️ Please type your phone number in the format *2547XXXXXXXX*.", {
-        parse_mode: "Markdown",
-      });
-      return;
-    }
-    const normalized = normalizePhone(text);
-    if (!normalized) {
-      bot.sendMessage(chatId, "❌ Invalid phone number. Use *2547XXXXXXXX* or *07XXXXXXXX*.", {
-        parse_mode: "Markdown",
-      });
-      return;
-    }
-    userState[chatId].phone = normalized;
-    const service = userState[chatId].service;
-    bot.sendMessage(
-      chatId,
-      `📱 You entered *${normalized}* for *${service.name}* (Ksh ${service.price}).\nIs this correct?`,
-      {
+    const text = msg.text.trim();
+    if (/^2547\d{8}$/.test(text)) {
+      userState[chatId].phone = text;
+      bot.sendMessage(chatId, `📱 You entered *${text}*.\nIs this correct?`, {
         parse_mode: "Markdown",
         reply_markup: {
           inline_keyboard: [
-            [{ text: "✅ Yes — Pay with M-Pesa", callback_data: `confirmPhone_${normalized}` }],
-            [{ text: "✏️ Change number", callback_data: "changePhone" }],
-            [{ text: "❌ Cancel", callback_data: "restart_yes" }],
+            [{ text: "✅ Yes", callback_data: `confirmPhone_${text}` }],
+            [{ text: "✏️ Change", callback_data: "changePhone" }],
           ],
         },
-      }
-    );
+      });
+    } else {
+      bot.sendMessage(chatId, "⚠️ Invalid number format! Use *2547XXXXXXXX*", {
+        parse_mode: "Markdown",
+      });
+    }
     return;
   }
 
-  if (userState[chatId]?.step === "awaitingProof") {
-    showMainMenu(chatId);
-    return;
-  }
-
-  if (userState[chatId]?.step && userState[chatId].step !== "enterPhone") {
-    showMainMenu(chatId);
+  // If expecting proof of payment but user typed text
+  if (userState[chatId]?.step === "awaitingProof" && msg.text) {
+    bot.sendMessage(chatId, "⚠️ Please upload a *screenshot/photo* of your payment as proof.");
     return;
   }
 
   if (!userState[chatId]) {
     showMainMenu(chatId);
-    return;
   }
 });
 
-bot.onText(/\/start/, (msg) => {
-  showMainMenu(msg.chat.id);
+// ✅ Handle photos (proof of payment)
+bot.on("photo", async (msg) => {
+  const chatId = msg.chat.id;
+
+  if (userState[chatId]?.step === "awaitingProof") {
+    const photos = msg.photo;
+    const fileId = photos[photos.length - 1].file_id;
+
+    // Get file link
+    const fileUrl = await bot.getFileLink(fileId);
+
+    bot.sendMessage(chatId, "✅ Thank you! Your proof of payment has been received. Our support team will verify shortly.");
+
+    // Forward proof to admin
+    bot.sendMessage(
+      process.env.ADMIN_CHAT_ID,
+      `📩 Proof of payment received from user *${msg.from.username || msg.from.first_name}*.\n\nService: ${userState[chatId].service.name}\nAmount: ${userState[chatId].service.price} Ksh\n\nScreenshot: ${fileUrl}`,
+      { parse_mode: "Markdown" }
+    );
+
+    delete userState[chatId];
+  } else {
+    bot.sendMessage(chatId, "📸 I received your photo. If it’s proof of payment, please select a service first.");
+  }
 });
 
-// ---------- Callback handlers ----------
+// ✅ Handle button clicks
 bot.on("callback_query", async (query) => {
   const chatId = query.message.chat.id;
   const data = query.data;
 
-  // restart
-  if (data === "restart_yes" || data === "restart") {
-    showMainMenu(chatId);
-    return bot.answerCallbackQuery(query.id);
-  }
-
-  if (data === "view_services") {
-    showMainMenu(chatId);
-    return bot.answerCallbackQuery(query.id);
-  }
-
   if (data.startsWith("service_")) {
-    const id = parseInt(data.split("_")[1], 10);
-    const service = services.find((s) => s.id === id);
-    if (!service) return bot.answerCallbackQuery(query.id, { text: "Service not found" });
+    const serviceId = parseInt(data.split("_")[1]);
+    const service = services.find((s) => s.id === serviceId);
+    if (!service) return;
+
     userState[chatId] = { step: "choosePayment", service };
-    await bot.sendMessage(chatId, `✅ You selected *${service.name}* (Ksh ${service.price}).\n\n💳 Choose a payment method:`, {
+
+    bot.sendMessage(chatId, `✅ You selected *${service.name}* (Ksh ${service.price}).\n\n💳 Choose your payment method:`, {
       parse_mode: "Markdown",
       reply_markup: {
         inline_keyboard: [
           [{ text: "📲 M-Pesa", callback_data: "pay_mpesa" }],
           [{ text: "🪙 Binance / Crypto", callback_data: "pay_crypto" }],
-          [{ text: "❌ Cancel", callback_data: "restart_yes" }],
         ],
       },
     });
-    return bot.answerCallbackQuery(query.id);
   }
 
   if (data === "pay_mpesa") {
     userState[chatId].step = "enterPhone";
-    await bot.sendMessage(chatId, "📱 Enter your M-Pesa number: *2547XXXXXXXX*", { parse_mode: "Markdown" });
-    return bot.answerCallbackQuery(query.id);
+    bot.sendMessage(chatId, "📱 Please enter your M-Pesa phone number (format: 2547XXXXXXXX)", {
+      parse_mode: "Markdown",
+    });
   }
 
-  // (crypto & other callbacks unchanged — keep your logic from original)
-
-  bot.answerCallbackQuery(query.id);
-});
-
-// ---------- Proof uploads ----------
-bot.on("photo", async (msg) => {
-  const chatId = msg.chat.id;
-  if (userState[chatId]?.step !== "awaitingProof") {
-    showMainMenu(chatId);
-    return;
+  if (data === "pay_crypto") {
+    userState[chatId].step = "awaitingProof";
+    bot.sendMessage(
+      chatId,
+      "🪙 *Crypto Payments*\n\nSend the amount to:\n\n" +
+        "BTC: `1ABCyourBTCwallet`\n" +
+        "USDT (TRC20): `TGyourTRC20wallet`\n\n" +
+        "📸 After payment, upload a *screenshot* here as proof.",
+      { parse_mode: "Markdown" }
+    );
   }
-  // forward proof logic (unchanged from original)
-});
 
-bot.on("document", async (msg) => {
-  const chatId = msg.chat.id;
-  if (userState[chatId]?.step !== "awaitingProof") {
-    showMainMenu(chatId);
-    return;
+  if (data.startsWith("confirmPhone_")) {
+    const phone = data.split("_")[1];
+    const service = userState[chatId].service;
+    sendStkPush(chatId, phone, service);
+    delete userState[chatId];
   }
-  // forward proof logic (unchanged from original)
+
+  if (data === "changePhone") {
+    userState[chatId].step = "enterPhone";
+    bot.sendMessage(chatId, "🔁 Please re-enter your phone number (2547XXXXXXXX).");
+  }
 });
 
-// ---------- STK Push + Callback ----------
-// (keep your original sendStkPush and /callback route unchanged)
+// ✅ Send STK Push
+async function sendStkPush(chatId, phone, service) {
+  bot.sendMessage(chatId, `💳 Sending payment request of *Ksh ${service.price}* to *${phone}*...`, {
+    parse_mode: "Markdown",
+  });
 
-// ---------- Root endpoint ----------
-app.get("/", (req, res) => res.send("Echo Labs bot running (webhook mode)"));
+  try {
+    const authResponse = await axios.get(
+      "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials",
+      {
+        auth: {
+          username: process.env.MPESA_CONSUMER_KEY,
+          password: process.env.MPESA_CONSUMER_SECRET,
+        },
+      }
+    );
 
-// Start express server
-app.listen(PORT, () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`);
-  console.log(`🤖 Bot started in WEBHOOK mode`);
+    const token = authResponse.data.access_token;
+    const timestamp = new Date().toISOString().replace(/[^0-9]/g, "").slice(0, 14);
+
+    const password = Buffer.from(
+      process.env.MPESA_SHORTCODE + process.env.MPESA_PASSKEY + timestamp
+    ).toString("base64");
+
+    const stkResponse = await axios.post(
+      "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
+      {
+        BusinessShortCode: process.env.MPESA_SHORTCODE,
+        Password: password,
+        Timestamp: timestamp,
+        TransactionType: "CustomerPayBillOnline",
+        Amount: service.price,
+        PartyA: phone,
+        PartyB: process.env.MPESA_SHORTCODE,
+        PhoneNumber: phone,
+        CallBackURL: process.env.MPESA_CALLBACK_URL,
+        AccountReference: "EchoLabsBot",
+        TransactionDesc: service.name,
+      },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    if (stkResponse.data.ResponseCode === "0") {
+      bot.sendMessage(chatId, `📲 STK Push sent! Enter your M-Pesa PIN to complete.`);
+    } else {
+      handleFailedPayment(chatId);
+    }
+  } catch (err) {
+    console.error("STK Push Error:", err.response ? err.response.data : err.message);
+    handleFailedPayment(chatId);
+  }
+}
+
+// ✅ Handle failed payment
+function handleFailedPayment(chatId) {
+  bot.sendMessage(chatId, "❌ Payment request failed. Do you want to try again?", {
+    reply_markup: {
+      inline_keyboard: [
+        [{ text: "🔄 Yes", callback_data: "restart_yes" }],
+        [{ text: "❌ No", callback_data: "restart_no" }],
+      ],
+    },
+  });
+}
+
+// ✅ Callback for payment confirmation
+app.post("/callback", (req, res) => {
+  console.log("📩 M-Pesa Callback:", JSON.stringify(req.body, null, 2));
+  res.json({ status: "ok" });
 });
+
+// ✅ Start express server
+app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
