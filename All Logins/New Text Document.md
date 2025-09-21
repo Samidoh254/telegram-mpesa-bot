@@ -1,8 +1,8 @@
 ***Daraja*** -Safaricom API
 
-&nbsp; isabbelamarie@gmail.com
+  isabbelamarie@gmail.com
 
-&nbsp; @Success.2027#
+  @Success.2027#
 
 
 
@@ -10,9 +10,9 @@
 
 ***GitHub***
 
-&nbsp; Username -Samidoh254
+  Username -Samidoh254
 
-&nbsp;           @Success.2027#
+            @Success.2027#
 
 
 
@@ -20,9 +20,9 @@
 
 ***Render***
 
-&nbsp; isabbelamarie@gmail.com
+  isabbelamarie@gmail.com
 
-&nbsp; @Success.2027#
+  @Success.2027#
 
 
 
@@ -30,9 +30,9 @@
 
 ***Telegram***
 
-&nbsp;  @TokyoKenyaBuyBot
+   @TokyoKenyaBuyBot
 
-&nbsp;  
+ 
 
 
 
@@ -40,15 +40,27 @@
 
 isabbelamarie@gmail.com
 
-&nbsp; @Success.2027#
+  @Success.2027#
 
-&nbsp;  Samido
+   Samido
 
-&nbsp;Authentication: 32sKluR8S6MqDvmjTG3vUX9aCKn\_5bxEa44H6k6nrvDcMz3gr
-
-
+ Authentication: 32sKluR8S6MqDvmjTG3vUX9aCKn\_5bxEa44H6k6nrvDcMz3gr
 
 
+
+
+
+
+
+
+
+CMD PROMPT
+
+git add .
+
+git commit -m "updated bot code"
+
+git push origin main
 
 
 

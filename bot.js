@@ -89,19 +89,19 @@ const SUB_FLOWS = {
   },
   chat_home_base: {
     options: [
-      [{ text: "Training ($2.99)", callback_data: "chb_training" }],
+      [{ text: "Training ($9.99)", callback_data: "chb_training" }],
       [{ text: "Buying Account ($199)", callback_data: "chb_buying" }],
     ],
   },
   echo_labs: {
     options: [
       [{ text: "Application Link ($1.99)", callback_data: "el_app_link" }],
-      [{ text: "Training ($2.99)", callback_data: "el_training" }],
+      [{ text: "Training ($9.99)", callback_data: "el_training" }],
     ],
   },
   handshake_ai: {
     options: [
-      [{ text: "Training ($2.99)", callback_data: "ha_training" }],
+      [{ text: "Training ($9.99)", callback_data: "ha_training" }],
       [{ text: "Buying Account ($239)", callback_data: "ha_buying" }],
       [{ text: "Application Link ($1.99)", callback_data: "ha_app_link" }],
       [{ text: "Referral Link ($3.99)", callback_data: "ha_referral" }],
@@ -109,7 +109,7 @@ const SUB_FLOWS = {
   },
   mercor_ai: {
     options: [
-      [{ text: "Training ($2.99)", callback_data: "ma_training" }],
+      [{ text: "Training ($9.99)", callback_data: "ma_training" }],
       [{ text: "Buying Account ($219)", callback_data: "ma_buying" }],
       [{ text: "Application Link ($1.99)", callback_data: "ma_app_link" }],
       [{ text: "Referral Link ($3.99)", callback_data: "ma_referral" }],
@@ -117,7 +117,7 @@ const SUB_FLOWS = {
   },
   uber_ai: {
     options: [
-      [{ text: "Training ($2.99)", callback_data: "ua_training" }],
+      [{ text: "Training ($9.99)", callback_data: "ua_training" }],
       [{ text: "Buying Account ($199)", callback_data: "ua_buying" }],
       [{ text: "Application Link ($1.99)", callback_data: "ua_app_link" }],
       [{ text: "Referral Link ($3.99)", callback_data: "ua_referral" }],
@@ -125,7 +125,6 @@ const SUB_FLOWS = {
   },
   cloudworkers: {
     options: [
-      [{ text: "Training ($2.99)", callback_data: "cw_training" }],
       [{ text: "Buying Account ($219)", callback_data: "cw_buying" }],
       [{ text: "Application Link ($1.99)", callback_data: "cw_app_link" }],
       [{ text: "Referral Link ($3.99)", callback_data: "cw_referral" }],
@@ -145,7 +144,7 @@ const SUB_FLOWS = {
       [{ text: "Academic and Freelance Writing ($9.99)", callback_data: "rjt_writing" }],
       [{ text: "AI Jobs ($2.99)", callback_data: "rjt_ai_jobs" }],
       [{ text: "Virtual Assistant ($29.99)", callback_data: "rjt_va" }],
-      [{ text: "Only Fans ($19.99)", callback_data: "rjt_onlyfans" }],
+      [{ text: "Only Fans ($29.99)", callback_data: "rjt_onlyfans" }],
       [{ text: "Chat Moderation ($19.99)", callback_data: "rjt_chat_mod" }],
       [{ text: "Affiliate Marketing ($19.99)", callback_data: "rjt_affiliate" }],
       [{ text: "Upwork & Fiverr Training ($19.99)", callback_data: "rjt_upwork_fiverr" }],
@@ -196,7 +195,7 @@ function showMainMenu(chatId) {
 
   bot.sendMessage(
     chatId,
-    "🌟 *Echo Labs Services* 🌟\n\nSelect a service.",
+    "⭐ *Welcome to 🔝 Trusted Vendor.* Let's fight poverty. Select a service below:",
     {
       parse_mode: "Markdown",
       reply_markup: { inline_keyboard: buttons },
