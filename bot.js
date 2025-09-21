@@ -29,57 +29,41 @@ const SUPPORT_USERNAME = '@Luqman2893'; // Forward payment proofs here
 const BINANCE_WALLET = process.env.BINANCE_WALLET || 'your_binance_wallet_address_here'; // Replace or set in .env
 const TRUST_WALLET = process.env.TRUST_WALLET || 'your_trust_wallet_address_here'; // Replace or set in .env
 
+// 🔹 Exchange Rate (USD to KSH)
+const EXCHANGE_RATE = 129;
+
+// 🔹 Jobs List
+const JOBS = [
+  "Handshake AI", "Uber AI", "AI English Evaluator", "Sigma AI", "Surge AI", "RWS Train AI", "Welocalize", "Playment", "Alignerr",
+  "Mecor AI", "Scale AI", "Lionbridge AI", "clickworker", "TELUS International AI", "LXT", "OneForma", "CloudFactory", "iMerit",
+  "Labelbox", "SuperAnnotate", "Toloka", "Hive", "Innodata", "Outlier", "TaskUs", "Shaip", "Sama", "Snorkel AI", "Defined.ai", "Invisible Technologies"
+];
+
 // 🔹 Services Catalog
 const services = [
-  { id: 1, name: "📝 Transcription Training", price: 1500, subFlow: "transcription_training" },
-  { id: 2, name: "🔗 Application Link", price: null, subFlow: "transcription_link" },
-  { id: 3, name: "🌍 Remote AI Jobs Training", price: 2000, subFlow: "remote_ai_jobs" },
-  { id: 4, name: "📚 Remote Work Application Training", price: 1800, subFlow: "remote_work_apply" },
-  { id: 5, name: "🛡️ Proxies", price: null, subFlow: "proxies" },
-  { id: 6, name: "📦 Fullu", price: null, subFlow: "fullu" },
-  { id: 7, name: "📞 USA Numbers", price: null, subFlow: "usa_numbers" },
-  { id: 8, name: "🌐 Website Development", price: 10000, subFlow: "website_dev" },
-  { id: 9, name: "🤖 Bot Development", price: 15000, subFlow: "bot_dev" },
-  { id: 10, name: "🔒 BM Verification", price: 5000, subFlow: "bm_verification" },
-  { id: 11, name: "💎 OnlyFans Training", price: 3000, subFlow: "onlyfans_training" },
-  { id: 12, name: "✍️ Freelance Writing", price: 2500, subFlow: "freelance_writing" },
-  { id: 13, name: "🎨 Graphic Design", price: 3500, subFlow: "graphic_design" },
-  { id: 14, name: "📈 Social Media Management", price: 4000, subFlow: "social_media" },
+  { id: 1, name: "Beginners Masterclass", price: null, subFlow: "beginners_masterclass" },
+  { id: 2, name: "Proxies (All Countries)", price: null, subFlow: "proxies" },
+  { id: 3, name: "Remote Jobs (Working Accounts)", price: null, subFlow: "remote_jobs" },
+  { id: 4, name: "Remote Job Training and application links", price: null, subFlow: "remote_job_training_links" },
+  { id: 5, name: "Chat Home Base", price: null, subFlow: "chat_home_base" },
+  { id: 6, name: "Echo Labs", price: null, subFlow: "echo_labs" },
+  { id: 7, name: "Handshake AI", price: null, subFlow: "handshake_ai" },
+  { id: 8, name: "Mercor AI", price: null, subFlow: "mercor_ai" },
+  { id: 9, name: "Uber AI", price: null, subFlow: "uber_ai" },
+  { id: 10, name: "Cloudworkers", price: null, subFlow: "cloudworkers" },
+  { id: 11, name: "Referral Links", price: null, subFlow: "referral_links" },
+  { id: 12, name: "USA and UK Numbers", price: null, subFlow: "usa_uk_numbers" },
+  { id: 13, name: "Maffulu", price: null, subFlow: "maffulu" },
+  { id: 14, name: "Remote Jobs Training", price: null, subFlow: "remote_jobs_training" },
+  { id: 15, name: "Extra services", price: null, subFlow: "extra_services" },
 ];
 
 // 🔹 Sub-flows with chained buttons (arrays for rows)
 const SUB_FLOWS = {
-  transcription_training: {
+  beginners_masterclass: {
     levels: [
-      [{ text: "🆕 Beginner (Ksh 130/session)", callback_data: "level_beginner" }],
-      [{ text: "📈 Intermediate (Ksh 499/session)", callback_data: "level_intermediate" }],
-      [{ text: "💎 Expert (Ksh 800/session)", callback_data: "level_expert" }],
-      [{ text: "👑 VIP Exclusive (Ksh 2000)", callback_data: "level_vip" }],
-    ],
-    platforms: [
-      [{ text: "👤 Rev", callback_data: "trans_rev" }, { text: "📹 GoTranscript", callback_data: "trans_gotranscript" }],
-      [{ text: "🔊 Verbit", callback_data: "trans_verbit" }, { text: "🎙️ AI-Media", callback_data: "trans_aimedia" }],
-      [{ text: "🔊 Echo Labs", callback_data: "trans_echo" }],
-    ],
-  },
-  transcription_link: {
-    initialOptions: [
-      [{ text: "🔒 Private Exclusive (Ksh 800)", callback_data: "link_private" }],
-      [{ text: "🌐 Public (Ksh 300)", callback_data: "link_public" }],
-    ],
-    accounts: [
-      [{ text: "👤 Rev", callback_data: "account_rev" }, { text: "📹 GoTranscript", callback_data: "account_gotranscript" }],
-      [{ text: "🔊 Verbit", callback_data: "account_verbit" }, { text: "🎙️ AI-Media", callback_data: "account_aimedia" }],
-      [{ text: "🔊 Echo Labs", callback_data: "account_echo" }],
-    ],
-  },
-  remote_ai_jobs: {
-    options: [
-      [{ text: "🤝 Handshake AI", callback_data: "ai_handshake" }, { text: "🚗 Uber AI", callback_data: "ai_uber" }],
-      [{ text: "📝 AI English Evaluator", callback_data: "ai_evaluator" }, { text: "📊 Sigma AI", callback_data: "ai_sigma" }],
-      [{ text: "⚡ Surge AI", callback_data: "ai_surge" }, { text: "🔄 RWS Train AI", callback_data: "ai_rws" }],
-      [{ text: "🌍 Welocalize", callback_data: "ai_welocalize" }, { text: "🎮 Playment", callback_data: "ai_playment" }],
-      [{ text: "📐 Alignerr", callback_data: "ai_alignerr" }],
+      [{ text: "Complete Beginner ($1)", callback_data: "level_complete_beginner" }],
+      [{ text: "Intermediary ($2.99)", callback_data: "level_intermediary" }],
     ],
   },
   proxies: {
@@ -90,32 +74,105 @@ const SUB_FLOWS = {
       [{ text: "🇦🇺 Australia", callback_data: "proxy_australia" }, { text: "🇫🇷 France", callback_data: "proxy_france" }],
       [{ text: "🇪🇬 Egypt", callback_data: "proxy_egypt" }, { text: "🇰🇼 Kuwait", callback_data: "proxy_kuwait" }],
     ],
-    subscriptions: [
-      [{ text: "📅 Monthly (Ksh 2500)", callback_data: "sub_monthly" }],
-      [{ text: "⏰ Weekly (Ksh 800)", callback_data: "sub_weekly" }],
+  },
+  remote_jobs: {
+    initialOptions: [
+      [{ text: "Complete Beginner Training ($1)", callback_data: "complete_beginner_training" }],
+      [{ text: "Intermediary Training ($2.99)", callback_data: "intermediary_training" }],
+      [{ text: "Application Links ($1.99)", callback_data: "application_links" }],
     ],
   },
-  usa_numbers: {
+  remote_job_training_links: {
+    initialOptions: [
+      [{ text: "Application Links Inclusive of Training ($2.99)", callback_data: "app_links_training" }],
+    ],
+  },
+  chat_home_base: {
     options: [
-      [{ text: "📱 WhatsApp", callback_data: "num_whatsapp" }],
-      [{ text: "🔐 Other Verifications", callback_data: "num_other" }],
+      [{ text: "Training ($2.99)", callback_data: "chb_training" }],
+      [{ text: "Buying Account ($199)", callback_data: "chb_buying" }],
     ],
   },
-  graphic_design: {
-    types: [
-      [{ text: "🏷️ Logo", callback_data: "graphic_logo" }],
-      [{ text: "📣 Banner Ads", callback_data: "graphic_banner" }],
-      [{ text: "📱 Social Graphics", callback_data: "graphic_social" }],
+  echo_labs: {
+    options: [
+      [{ text: "Application Link ($1.99)", callback_data: "el_app_link" }],
+      [{ text: "Training ($2.99)", callback_data: "el_training" }],
     ],
   },
-  social_media: {
-    platforms: [
-      [{ text: "📸 Instagram", callback_data: "social_instagram" }],
-      [{ text: "🐦 Twitter/X", callback_data: "social_twitter" }],
-      [{ text: "💼 LinkedIn", callback_data: "social_linkedin" }],
+  handshake_ai: {
+    options: [
+      [{ text: "Training ($2.99)", callback_data: "ha_training" }],
+      [{ text: "Buying Account ($239)", callback_data: "ha_buying" }],
+      [{ text: "Application Link ($1.99)", callback_data: "ha_app_link" }],
+      [{ text: "Referral Link ($3.99)", callback_data: "ha_referral" }],
+    ],
+  },
+  mercor_ai: {
+    options: [
+      [{ text: "Training ($2.99)", callback_data: "ma_training" }],
+      [{ text: "Buying Account ($219)", callback_data: "ma_buying" }],
+      [{ text: "Application Link ($1.99)", callback_data: "ma_app_link" }],
+      [{ text: "Referral Link ($3.99)", callback_data: "ma_referral" }],
+    ],
+  },
+  uber_ai: {
+    options: [
+      [{ text: "Training ($2.99)", callback_data: "ua_training" }],
+      [{ text: "Buying Account ($199)", callback_data: "ua_buying" }],
+      [{ text: "Application Link ($1.99)", callback_data: "ua_app_link" }],
+      [{ text: "Referral Link ($3.99)", callback_data: "ua_referral" }],
+    ],
+  },
+  cloudworkers: {
+    options: [
+      [{ text: "Training ($2.99)", callback_data: "cw_training" }],
+      [{ text: "Buying Account ($219)", callback_data: "cw_buying" }],
+      [{ text: "Application Link ($1.99)", callback_data: "cw_app_link" }],
+      [{ text: "Referral Link ($3.99)", callback_data: "cw_referral" }],
+    ],
+  },
+  usa_uk_numbers: {
+    options: [
+      [{ text: "One Time Code For Verification (OTP) ($1.9)", callback_data: "num_otp" }],
+      [{ text: "Whatsapp Numbers ($2.9)", callback_data: "num_whatsapp" }],
+      [{ text: "PayPal Verification ($1.9)", callback_data: "num_paypal" }],
+      [{ text: "Gmail Verification ($1.9)", callback_data: "num_gmail" }],
+    ],
+  },
+  remote_jobs_training: {
+    options: [
+      [{ text: "Transcription ($9.99)", callback_data: "rjt_transcription" }],
+      [{ text: "Academic and Freelance Writing ($9.99)", callback_data: "rjt_writing" }],
+      [{ text: "AI Jobs ($2.99)", callback_data: "rjt_ai_jobs" }],
+      [{ text: "Virtual Assistant ($29.99)", callback_data: "rjt_va" }],
+      [{ text: "Only Fans ($19.99)", callback_data: "rjt_onlyfans" }],
+      [{ text: "Chat Moderation ($19.99)", callback_data: "rjt_chat_mod" }],
+      [{ text: "Affiliate Marketing ($19.99)", callback_data: "rjt_affiliate" }],
+      [{ text: "Upwork & Fiverr Training ($19.99)", callback_data: "rjt_upwork_fiverr" }],
+    ],
+  },
+  extra_services: {
+    options: [
+      [{ text: "Website Development ($249.99)", callback_data: "extra_website" }],
+      [{ text: "Bot Development ($201.99)", callback_data: "extra_bot" }],
+      [{ text: "BM Verification ($201.99)", callback_data: "extra_bm" }],
     ],
   },
 };
+
+// 🔹 Generate Jobs Buttons
+function generateJobsButtons(prefix) {
+  const buttons = [];
+  for (let i = 0; i < JOBS.length; i += 2) {
+    const row = [];
+    row.push({ text: JOBS[i], callback_data: `${prefix}${JOBS[i].toLowerCase().replace(/ /g, "_")}` });
+    if (i + 1 < JOBS.length) {
+      row.push({ text: JOBS[i + 1], callback_data: `${prefix}${JOBS[i + 1].toLowerCase().replace(/ /g, "_")}` });
+    }
+    buttons.push(row);
+  }
+  return buttons;
+}
 
 // 🔹 State Management
 const userState = new Map();
@@ -133,7 +190,7 @@ function getFAQButtons() {
 
 // 🔹 Main Menu
 function showMainMenu(chatId) {
-  const buttons = services.map((s) => [{ text: `${s.name} — Ksh ${s.price || 'Varies'}`, callback_data: `service_${s.id}` }]);
+  const buttons = services.map((s) => [{ text: s.name, callback_data: `service_${s.id}` }]);
   buttons.push([{ text: "💬 Support", url: "https://t.me/Luqman2893" }]);
   buttons.push([{ text: "❓ FAQs", callback_data: "show_faq" }]);
 
@@ -152,10 +209,10 @@ function showMainMenu(chatId) {
 // 🔹 Message Handler
 bot.on("message", (msg) => {
   const chatId = msg.chat.id;
-  const text = msg.text?.trim().toLowerCase();
+  const text = msg.text?.trim();
   if (!text) return;
 
-  if (text === "start") {
+  if (text.toLowerCase() === "/start" || text.toLowerCase() === "start") {
     userState.delete(chatId);
     showMainMenu(chatId);
     return;
@@ -163,7 +220,6 @@ bot.on("message", (msg) => {
 
   if (msg.photo) {
     const photoId = msg.photo[msg.photo.length - 1].file_id;
-    // Check if it's a payment screenshot (basic heuristic: assume payment-related if from M-Pesa or crypto context)
     const state = userState.get(chatId);
     if (state?.step === "uploadProof" || state?.step === "confirmOrder") {
       bot.forwardMessage(SUPPORT_USERNAME, chatId, msg.message_id)
@@ -209,17 +265,18 @@ bot.on("message", (msg) => {
             ],
           },
         });
-      } else if (text !== "start") {
-        bot.sendMessage(chatId, "⚠️ Format: 2547XXXXXXXX", { parse_mode: "Markdown" });
+      } else {
+        bot.sendMessage(chatId, "⚠️ Invalid format. Use 2547XXXXXXXX", { parse_mode: "Markdown" });
       }
       break;
 
-    case "fulluQuantity":
+    case "maffuluQuantity":
       const qty = parseInt(text);
-      if (qty >= 1 && qty <= 1000) {
+      if (!isNaN(qty) && qty >= 1 && qty <= 1000) {
         state.quantity = qty;
-        state.finalPrice = qty * 150;
-        bot.sendMessage(chatId, `Ksh ${state.finalPrice}`, {
+        state.usdPrice = qty * 1.19;
+        state.kshPrice = Math.ceil(state.usdPrice * EXCHANGE_RATE);
+        bot.sendMessage(chatId, `$${state.usdPrice.toFixed(2)} for ${qty} Maffulu.`, {
           parse_mode: "Markdown",
           reply_markup: {
             inline_keyboard: [
@@ -229,81 +286,9 @@ bot.on("message", (msg) => {
           },
         });
         state.step = "confirmOrder";
-      } else if (text !== "start") {
-        bot.sendMessage(chatId, "⚠️ 1-1000 only", { parse_mode: "Markdown" });
+      } else {
+        showMainMenu(chatId);
       }
-      break;
-
-    case "usaOtherCode":
-      state.codeRequest = text;
-      state.finalPrice = 150;
-      bot.sendMessage(chatId, `Ksh 150`, {
-        parse_mode: "Markdown",
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: "💳 Pay", callback_data: "choosePayment" }],
-            [{ text: "🔙 Back", callback_data: "backToService" }],
-          ],
-        },
-      });
-      state.step = "confirmOrder";
-      break;
-
-    case "websiteDetails":
-      state.websiteDetails = text;
-      bot.sendMessage(chatId, "Ksh 10,000", {
-        parse_mode: "Markdown",
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: "💳 Pay", callback_data: "choosePayment" }],
-            [{ text: "🔙 Back", callback_data: "backToService" }],
-          ],
-        },
-      });
-      state.step = "confirmOrder";
-      break;
-
-    case "botDetails":
-      state.botDetails = text;
-      bot.sendMessage(chatId, "Ksh 15,000", {
-        parse_mode: "Markdown",
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: "💳 Pay", callback_data: "choosePayment" }],
-            [{ text: "🔙 Back", callback_data: "backToService" }],
-          ],
-        },
-      });
-      state.step = "confirmOrder";
-      break;
-
-    case "bmCredentials":
-      state.bmCredentials = text;
-      bot.sendMessage(chatId, "Ksh 5,000", {
-        parse_mode: "Markdown",
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: "💳 Pay", callback_data: "choosePayment" }],
-            [{ text: "🔙 Back", callback_data: "backToService" }],
-          ],
-        },
-      });
-      state.step = "confirmOrder";
-      break;
-
-    case "writingDetails":
-      state.writingDetails = text;
-      state.finalPrice = 2500;
-      bot.sendMessage(chatId, "Ksh 2,500", {
-        parse_mode: "Markdown",
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: "💳 Pay", callback_data: "choosePayment" }],
-            [{ text: "🔙 Back", callback_data: "backToService" }],
-          ],
-        },
-      });
-      state.step = "confirmOrder";
       break;
 
     default:
@@ -355,176 +340,22 @@ bot.on("callback_query", async (query) => {
 
     state.service = service;
     state.serviceId = serviceId;
-    state.finalPrice = service.price || 0;
 
     handleServiceSelection(chatId, serviceId);
     return;
   }
 
-  // Transcription Training
-  if (data.startsWith("trans_")) {
-    const platform = data.split("_")[1];
-    let description = "";
-    switch (platform) {
-      case "rev":
-        description = "Rev: Human/AI. $1.50/min. Podcasts, legal.";
-        break;
-      case "gotranscript":
-        description = "GoTranscript: 100% human. $0.60/min. Academic.";
-        break;
-      case "verbit":
-        description = "Verbit: AI-human. Live broadcasts.";
-        break;
-      case "aimedia":
-        description = "AI-Media: Captioning. Videos, events.";
-        break;
-      case "echo":
-        description = "Echo Labs: Custom transcription tools.";
-        break;
-    }
-    state.platform = platform;
-    bot.sendMessage(chatId, `${platform.toUpperCase()}: ${description}\nKsh ${state.finalPrice}/session`, {
-      parse_mode: "Markdown",
-      reply_markup: {
-        inline_keyboard: [
-          [{ text: "💳 Pay", callback_data: "choosePayment" }],
-          [{ text: "🔙 Back", callback_data: "backToService" }],
-        ],
-      },
-    });
-    state.step = "confirmOrder";
-    return;
-  }
-
-  // Transcription Link
-  if (data === "link_private" || data === "link_public") {
-    state.linkType = data === "link_private" ? "Private" : "Public";
-    state.finalPrice = data === "link_private" ? 800 : 300;
-    bot.sendMessage(chatId, "Select Account:", {
-      parse_mode: "Markdown",
-      reply_markup: { inline_keyboard: SUB_FLOWS.transcription_link.accounts },
-    });
-    state.step = "chooseAccount";
-    return;
-  }
-  if (data.startsWith("account_")) {
-    const platform = data.split("_")[1];
-    let description = "";
-    switch (platform) {
-      case "rev":
-        description = "Rev: Quick audio gigs.";
-        break;
-      case "gotranscript":
-        description = "GoTranscript: Multilingual.";
-        break;
-      case "verbit":
-        description = "Verbit: Media captioning.";
-        break;
-      case "aimedia":
-        description = "AI-Media: Video subtitles.";
-        break;
-      case "echo":
-        description = "Echo Labs: Exclusive access.";
-        break;
-    }
-    state.account = platform;
-    bot.sendMessage(chatId, `${state.linkType} for ${platform.toUpperCase()}: ${description}\nKsh ${state.finalPrice}`, {
-      parse_mode: "Markdown",
-      reply_markup: {
-        inline_keyboard: [
-          [{ text: "💳 Pay", callback_data: "choosePayment" }],
-          [{ text: "🔙 Back", callback_data: "backToService" }],
-        ],
-      },
-    });
-    state.step = "confirmOrder";
-    return;
-  }
-
-  // Transcription Training Levels
+  // Beginners Masterclass
   if (data.startsWith("level_")) {
-    const level = data.split("_")[1];
-    switch (level) {
-      case "beginner":
-        state.level = "Beginner";
-        state.finalPrice = 130;
-        bot.sendMessage(chatId, "Select Platform:", {
-          parse_mode: "Markdown",
-          reply_markup: { inline_keyboard: SUB_FLOWS.transcription_training.platforms },
-        });
-        state.step = "chooseTransPlatform";
-        break;
-      case "intermediate":
-        state.level = "Intermediate";
-        state.finalPrice = 499;
-        bot.sendMessage(chatId, "Select Platform:", {
-          parse_mode: "Markdown",
-          reply_markup: { inline_keyboard: SUB_FLOWS.transcription_training.platforms },
-        });
-        state.step = "chooseTransPlatform";
-        break;
-      case "expert":
-        state.level = "Expert";
-        state.finalPrice = 800;
-        bot.sendMessage(chatId, "Select Platform:", {
-          parse_mode: "Markdown",
-          reply_markup: { inline_keyboard: SUB_FLOWS.transcription_training.platforms },
-        });
-        state.step = "chooseTransPlatform";
-        break;
-      case "vip":
-        state.level = "VIP Exclusive";
-        state.finalPrice = 2000;
-        bot.sendMessage(chatId, "VIP Exclusive: Premium training.\nKsh 2000", {
-          parse_mode: "Markdown",
-          reply_markup: {
-            inline_keyboard: [
-              [{ text: "💳 Pay", callback_data: "choosePayment" }],
-              [{ text: "🔙 Back", callback_data: "backToService" }],
-            ],
-          },
-        });
-        state.step = "confirmOrder";
-        break;
+    const level = data.split("_").slice(1).join(" ");
+    state.level = level.charAt(0).toUpperCase() + level.slice(1).replace(/_/g, " ");
+    if (data === "level_complete_beginner") {
+      state.usdPrice = 1;
+    } else if (data === "level_intermediary") {
+      state.usdPrice = 2.99;
     }
-    return;
-  }
-
-  // Remote AI Jobs
-  if (data.startsWith("ai_")) {
-    const job = data.split("_")[1];
-    let description = "";
-    switch (job) {
-      case "handshake":
-        description = "Handshake AI: Validate AI responses.";
-        break;
-      case "uber":
-        description = "Uber AI: Annotate driving data.";
-        break;
-      case "evaluator":
-        description = "AI English: Rate essays.";
-        break;
-      case "sigma":
-        description = "Sigma AI: Validate translations.";
-        break;
-      case "surge":
-        description = "Surge AI: Label images/text.";
-        break;
-      case "rws":
-        description = "RWS Train AI: Transcribe/tag.";
-        break;
-      case "welocalize":
-        description = "Welocalize: Categorize content.";
-        break;
-      case "playment":
-        description = "Playment: Annotate videos.";
-        break;
-      case "alignerr":
-        description = "Alignerr: Refine voice models.";
-        break;
-    }
-    state.job = job.replace(/_/g, ' ').toUpperCase();
-    bot.sendMessage(chatId, `${state.job}: ${description}\nKsh 2,000`, {
+    state.kshPrice = Math.ceil(state.usdPrice * EXCHANGE_RATE);
+    bot.sendMessage(chatId, `${state.level}: $${state.usdPrice.toFixed(2)}`, {
       parse_mode: "Markdown",
       reply_markup: {
         inline_keyboard: [
@@ -540,17 +371,9 @@ bot.on("callback_query", async (query) => {
   // Proxies
   if (data.startsWith("proxy_")) {
     state.country = data.split("_")[1].toUpperCase();
-    bot.sendMessage(chatId, "Select Plan:", {
-      parse_mode: "Markdown",
-      reply_markup: { inline_keyboard: SUB_FLOWS.proxies.subscriptions },
-    });
-    state.step = "chooseSub";
-    return;
-  }
-  if (data === "sub_monthly" || data === "sub_weekly") {
-    state.subscription = data === "sub_monthly" ? "Monthly" : "Weekly";
-    state.finalPrice = data === "sub_monthly" ? 2500 : 800;
-    bot.sendMessage(chatId, `${state.country} ${state.subscription}\nKsh ${state.finalPrice}`, {
+    state.usdPrice = 1;
+    state.kshPrice = Math.ceil(1 * EXCHANGE_RATE);
+    bot.sendMessage(chatId, `${state.country} Proxy: $${state.usdPrice.toFixed(2)}`, {
       parse_mode: "Markdown",
       reply_markup: {
         inline_keyboard: [
@@ -563,11 +386,31 @@ bot.on("callback_query", async (query) => {
     return;
   }
 
-  // USA Numbers
-  if (data === "num_whatsapp") {
-    state.numType = "WhatsApp";
-    state.finalPrice = 1000;
-    bot.sendMessage(chatId, "Ksh 1,000", {
+  // Remote Jobs (Working Accounts)
+  if (data === "complete_beginner_training" || data === "intermediary_training" || data === "application_links") {
+    state.trainingType = data.replace(/_/g, " ").charAt(0).toUpperCase() + data.replace(/_/g, " ").slice(1);
+    let prefix;
+    if (data === "complete_beginner_training") {
+      state.usdPrice = 1;
+      prefix = "beginner_";
+    } else if (data === "intermediary_training") {
+      state.usdPrice = 2.99;
+      prefix = "inter_";
+    } else {
+      state.usdPrice = 1.99;
+      prefix = "app_";
+    }
+    state.kshPrice = Math.ceil(state.usdPrice * EXCHANGE_RATE);
+    bot.sendMessage(chatId, `Select Job for ${state.trainingType}:`, {
+      parse_mode: "Markdown",
+      reply_markup: { inline_keyboard: generateJobsButtons(prefix) },
+    });
+    state.step = "chooseJob";
+    return;
+  }
+  if (data.startsWith("beginner_") || data.startsWith("inter_") || data.startsWith("app_")) {
+    state.job = data.split("_").slice(1).join(" ").toUpperCase();
+    bot.sendMessage(chatId, `${state.trainingType} - ${state.job}: $${state.usdPrice.toFixed(2)}`, {
       parse_mode: "Markdown",
       reply_markup: {
         inline_keyboard: [
@@ -577,45 +420,23 @@ bot.on("callback_query", async (query) => {
       },
     });
     state.step = "confirmOrder";
-    return;
-  }
-  if (data === "num_other") {
-    state.step = "usaOtherCode";
-    bot.sendMessage(chatId, "Specify Service:", {
-      parse_mode: "Markdown",
-      reply_markup: getFAQButtons(),
-    });
     return;
   }
 
-  // Other Services
-  if (state.service?.subFlow === "website_dev") {
-    state.step = "websiteDetails";
-    bot.sendMessage(chatId, "Describe:", {
+  // Remote Job Training and application links
+  if (data === "app_links_training") {
+    state.usdPrice = 2.99;
+    state.kshPrice = Math.ceil(2.99 * EXCHANGE_RATE);
+    bot.sendMessage(chatId, "Select Job for Application Links Inclusive of Training:", {
       parse_mode: "Markdown",
-      reply_markup: getFAQButtons(),
+      reply_markup: { inline_keyboard: generateJobsButtons("training_link_") },
     });
+    state.step = "chooseJobTrainingLink";
     return;
   }
-  if (state.service?.subFlow === "bot_dev") {
-    state.step = "botDetails";
-    bot.sendMessage(chatId, "Describe:", {
-      parse_mode: "Markdown",
-      reply_markup: getFAQButtons(),
-    });
-    return;
-  }
-  if (state.service?.subFlow === "bm_verification") {
-    state.step = "bmCredentials";
-    bot.sendMessage(chatId, "Submit:", {
-      parse_mode: "Markdown",
-      reply_markup: getFAQButtons(),
-    });
-    return;
-  }
-  if (state.service?.subFlow === "onlyfans_training") {
-    state.finalPrice = 3000;
-    bot.sendMessage(chatId, "Ksh 3,000", {
+  if (data.startsWith("training_link_")) {
+    state.job = data.split("_").slice(2).join(" ").toUpperCase();
+    bot.sendMessage(chatId, `Application Links Inclusive of Training - ${state.job}: $${state.usdPrice.toFixed(2)}`, {
       parse_mode: "Markdown",
       reply_markup: {
         inline_keyboard: [
@@ -627,26 +448,17 @@ bot.on("callback_query", async (query) => {
     state.step = "confirmOrder";
     return;
   }
-  if (state.service?.subFlow === "freelance_writing") {
-    state.step = "writingDetails";
-    bot.sendMessage(chatId, "Specify:", {
-      parse_mode: "Markdown",
-      reply_markup: getFAQButtons(),
-    });
-    return;
-  }
-  if (state.service?.subFlow === "graphic_design") {
-    bot.sendMessage(chatId, "Select Type:", {
-      parse_mode: "Markdown",
-      reply_markup: { inline_keyboard: SUB_FLOWS.graphic_design.types },
-    });
-    state.step = "graphicType";
-    return;
-  }
-  if (data.startsWith("graphic_")) {
-    state.graphicType = data.split("_")[1].toUpperCase();
-    state.finalPrice = 3500;
-    bot.sendMessage(chatId, `${state.graphicType}\nKsh 3,500`, {
+
+  // Chat Home Base
+  if (data.startsWith("chb_")) {
+    state.option = data.split("_")[1].charAt(0).toUpperCase() + data.split("_")[1].slice(1);
+    if (data === "chb_training") {
+      state.usdPrice = 2.99;
+    } else if (data === "chb_buying") {
+      state.usdPrice = 199;
+    }
+    state.kshPrice = Math.ceil(state.usdPrice * EXCHANGE_RATE);
+    bot.sendMessage(chatId, `${state.option}: $${state.usdPrice.toFixed(2)}`, {
       parse_mode: "Markdown",
       reply_markup: {
         inline_keyboard: [
@@ -658,18 +470,191 @@ bot.on("callback_query", async (query) => {
     state.step = "confirmOrder";
     return;
   }
-  if (state.service?.subFlow === "social_media") {
-    bot.sendMessage(chatId, "Select Platform:", {
+
+  // Echo Labs
+  if (data.startsWith("el_")) {
+    state.option = data.split("_").slice(1).join(" ").charAt(0).toUpperCase() + data.split("_").slice(1).join(" ").slice(1);
+    if (data === "el_app_link") {
+      state.usdPrice = 1.99;
+    } else if (data === "el_training") {
+      state.usdPrice = 2.99;
+    }
+    state.kshPrice = Math.ceil(state.usdPrice * EXCHANGE_RATE);
+    bot.sendMessage(chatId, `${state.option}: $${state.usdPrice.toFixed(2)}`, {
       parse_mode: "Markdown",
-      reply_markup: { inline_keyboard: SUB_FLOWS.social_media.platforms },
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "💳 Pay", callback_data: "choosePayment" }],
+          [{ text: "🔙 Back", callback_data: "backToService" }],
+        ],
+      },
     });
-    state.step = "socialPlatform";
+    state.step = "confirmOrder";
     return;
   }
-  if (data.startsWith("social_")) {
-    state.socialPlatform = data.split("_")[1].toUpperCase();
-    state.finalPrice = 4000;
-    bot.sendMessage(chatId, `${state.socialPlatform}\nKsh 4,000`, {
+
+  // Handshake AI
+  if (data.startsWith("ha_")) {
+    state.option = data.split("_").slice(1).join(" ").charAt(0).toUpperCase() + data.split("_").slice(1).join(" ").slice(1);
+    if (data === "ha_training") {
+      state.usdPrice = 2.99;
+    } else if (data === "ha_buying") {
+      state.usdPrice = 239;
+    } else if (data === "ha_app_link") {
+      state.usdPrice = 1.99;
+    } else if (data === "ha_referral") {
+      state.usdPrice = 3.99;
+    }
+    state.kshPrice = Math.ceil(state.usdPrice * EXCHANGE_RATE);
+    bot.sendMessage(chatId, `${state.option}: $${state.usdPrice.toFixed(2)}`, {
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "💳 Pay", callback_data: "choosePayment" }],
+          [{ text: "🔙 Back", callback_data: "backToService" }],
+        ],
+      },
+    });
+    state.step = "confirmOrder";
+    return;
+  }
+
+  // Mercor AI
+  if (data.startsWith("ma_")) {
+    state.option = data.split("_").slice(1).join(" ").charAt(0).toUpperCase() + data.split("_").slice(1).join(" ").slice(1);
+    if (data === "ma_training") {
+      state.usdPrice = 2.99;
+    } else if (data === "ma_buying") {
+      state.usdPrice = 219;
+    } else if (data === "ma_app_link") {
+      state.usdPrice = 1.99;
+    } else if (data === "ma_referral") {
+      state.usdPrice = 3.99;
+    }
+    state.kshPrice = Math.ceil(state.usdPrice * EXCHANGE_RATE);
+    bot.sendMessage(chatId, `${state.option}: $${state.usdPrice.toFixed(2)}`, {
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "💳 Pay", callback_data: "choosePayment" }],
+          [{ text: "🔙 Back", callback_data: "backToService" }],
+        ],
+      },
+    });
+    state.step = "confirmOrder";
+    return;
+  }
+
+  // Uber AI
+  if (data.startsWith("ua_")) {
+    state.option = data.split("_").slice(1).join(" ").charAt(0).toUpperCase() + data.split("_").slice(1).join(" ").slice(1);
+    if (data === "ua_training") {
+      state.usdPrice = 2.99;
+    } else if (data === "ua_buying") {
+      state.usdPrice = 199;
+    } else if (data === "ua_app_link") {
+      state.usdPrice = 1.99;
+    } else if (data === "ua_referral") {
+      state.usdPrice = 3.99;
+    }
+    state.kshPrice = Math.ceil(state.usdPrice * EXCHANGE_RATE);
+    bot.sendMessage(chatId, `${state.option}: $${state.usdPrice.toFixed(2)}`, {
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "💳 Pay", callback_data: "choosePayment" }],
+          [{ text: "🔙 Back", callback_data: "backToService" }],
+        ],
+      },
+    });
+    state.step = "confirmOrder";
+    return;
+  }
+
+  // Cloudworkers
+  if (data.startsWith("cw_")) {
+    state.option = data.split("_").slice(1).join(" ").charAt(0).toUpperCase() + data.split("_").slice(1).join(" ").slice(1);
+    if (data === "cw_training") {
+      state.usdPrice = 2.99;
+    } else if (data === "cw_buying") {
+      state.usdPrice = 219;
+    } else if (data === "cw_app_link") {
+      state.usdPrice = 1.99;
+    } else if (data === "cw_referral") {
+      state.usdPrice = 3.99;
+    }
+    state.kshPrice = Math.ceil(state.usdPrice * EXCHANGE_RATE);
+    bot.sendMessage(chatId, `${state.option}: $${state.usdPrice.toFixed(2)}`, {
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "💳 Pay", callback_data: "choosePayment" }],
+          [{ text: "🔙 Back", callback_data: "backToService" }],
+        ],
+      },
+    });
+    state.step = "confirmOrder";
+    return;
+  }
+
+  // USA and UK Numbers
+  if (data.startsWith("num_")) {
+    state.numType = data.split("_").slice(1).join(" ").toUpperCase();
+    if (data === "num_otp" || data === "num_paypal" || data === "num_gmail") {
+      state.usdPrice = 1.9;
+    } else if (data === "num_whatsapp") {
+      state.usdPrice = 2.9;
+    }
+    state.kshPrice = Math.ceil(state.usdPrice * EXCHANGE_RATE);
+    bot.sendMessage(chatId, `${state.numType}: $${state.usdPrice.toFixed(1)}`, {
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "💳 Pay", callback_data: "choosePayment" }],
+          [{ text: "🔙 Back", callback_data: "backToService" }],
+        ],
+      },
+    });
+    state.step = "confirmOrder";
+    return;
+  }
+
+  // Remote Jobs Training
+  if (data.startsWith("rjt_")) {
+    state.option = data.split("_").slice(1).join(" ").charAt(0).toUpperCase() + data.split("_").slice(1).join(" ").slice(1);
+    if (data === "rjt_transcription" || data === "rjt_writing") {
+      state.usdPrice = 9.99;
+    } else if (data === "rjt_ai_jobs") {
+      state.usdPrice = 2.99;
+    } else if (data === "rjt_va") {
+      state.usdPrice = 29.99;
+    } else {
+      state.usdPrice = 19.99;
+    }
+    state.kshPrice = Math.ceil(state.usdPrice * EXCHANGE_RATE);
+    bot.sendMessage(chatId, `${state.option}: $${state.usdPrice.toFixed(2)}`, {
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "💳 Pay", callback_data: "choosePayment" }],
+          [{ text: "🔙 Back", callback_data: "backToService" }],
+        ],
+      },
+    });
+    state.step = "confirmOrder";
+    return;
+  }
+
+  // Extra services
+  if (data.startsWith("extra_")) {
+    state.option = data.split("_").slice(1).join(" ").charAt(0).toUpperCase() + data.split("_").slice(1).join(" ").slice(1);
+    if (data === "extra_website") {
+      state.usdPrice = 249.99;
+    } else {
+      state.usdPrice = 201.99;
+    }
+    state.kshPrice = Math.ceil(state.usdPrice * EXCHANGE_RATE);
+    bot.sendMessage(chatId, `${state.option}: $${state.usdPrice.toFixed(2)}`, {
       parse_mode: "Markdown",
       reply_markup: {
         inline_keyboard: [
@@ -684,7 +669,8 @@ bot.on("callback_query", async (query) => {
 
   // Payment Flow
   if (data === "choosePayment") {
-    bot.sendMessage(chatId, `${state.service.name} - ${state.level || ''}\nKsh ${state.finalPrice}`, {
+    const detail = state.level || state.country || state.job || state.option || state.trainingType || state.numType || `${state.quantity} Maffulu` || '';
+    bot.sendMessage(chatId, `${state.service.name} - ${detail}\n$${state.usdPrice.toFixed(2)}`, {
       parse_mode: "Markdown",
       reply_markup: {
         inline_keyboard: [
@@ -698,7 +684,7 @@ bot.on("callback_query", async (query) => {
   }
   if (data === "pay_mpesa") {
     state.step = "enterPhone";
-    bot.sendMessage(chatId, "Enter Number: 2547XXXXXXXX", {
+    bot.sendMessage(chatId, "Enter Phone Number (2547XXXXXXXX):", {
       parse_mode: "Markdown",
       reply_markup: getFAQButtons(),
     });
@@ -706,7 +692,7 @@ bot.on("callback_query", async (query) => {
   }
   if (data === "pay_crypto") {
     state.step = "uploadProof";
-    bot.sendMessage(chatId, `🪙 Pay Ksh ${state.finalPrice} to:\nBinance: ${BINANCE_WALLET}\nTrust Wallet: ${TRUST_WALLET}\nUpload proof (screenshot).`, {
+    bot.sendMessage(chatId, `🪙 Pay $${state.usdPrice.toFixed(2)} (or equivalent in crypto) to:\nBinance: ${BINANCE_WALLET}\nTrust Wallet: ${TRUST_WALLET}\nUpload proof (screenshot).`, {
       parse_mode: "Markdown",
       reply_markup: getFAQButtons(),
     });
@@ -719,7 +705,7 @@ bot.on("callback_query", async (query) => {
   }
   if (data === "changePhone") {
     state.step = "enterPhone";
-    bot.sendMessage(chatId, "Re-enter: 2547XXXXXXXX", { parse_mode: "Markdown" });
+    bot.sendMessage(chatId, "Re-enter Phone Number (2547XXXXXXXX):", { parse_mode: "Markdown" });
     return;
   }
 });
@@ -730,28 +716,12 @@ function handleServiceSelection(chatId, serviceId) {
   const state = userState.get(chatId);
 
   switch (subFlow) {
-    case "transcription_training":
-      bot.sendMessage(chatId, "Select Your Level:", {
+    case "beginners_masterclass":
+      bot.sendMessage(chatId, "Select Level:", {
         parse_mode: "Markdown",
         reply_markup: { inline_keyboard: SUB_FLOWS[subFlow].levels },
       });
       state.step = "chooseLevel";
-      break;
-
-    case "transcription_link":
-      bot.sendMessage(chatId, "Select Link Type:", {
-        parse_mode: "Markdown",
-        reply_markup: { inline_keyboard: SUB_FLOWS[subFlow].initialOptions },
-      });
-      state.step = "chooseLinkType";
-      break;
-
-    case "remote_ai_jobs":
-      bot.sendMessage(chatId, "Select Job:", {
-        parse_mode: "Markdown",
-        reply_markup: { inline_keyboard: SUB_FLOWS[subFlow].options },
-      });
-      state.step = "chooseAIJob";
       break;
 
     case "proxies":
@@ -762,54 +732,70 @@ function handleServiceSelection(chatId, serviceId) {
       state.step = "chooseCountry";
       break;
 
-    case "fullu":
-      state.step = "fulluQuantity";
+    case "remote_jobs":
+      bot.sendMessage(chatId, "Select Option:", {
+        parse_mode: "Markdown",
+        reply_markup: { inline_keyboard: SUB_FLOWS[subFlow].initialOptions },
+      });
+      state.step = "chooseRemoteOption";
+      break;
+
+    case "remote_job_training_links":
+      bot.sendMessage(chatId, "Select Option:", {
+        parse_mode: "Markdown",
+        reply_markup: { inline_keyboard: SUB_FLOWS[subFlow].initialOptions },
+      });
+      state.step = "chooseTrainingLinkOption";
+      break;
+
+    case "chat_home_base":
+    case "echo_labs":
+    case "handshake_ai":
+    case "mercor_ai":
+    case "uber_ai":
+    case "cloudworkers":
+    case "usa_uk_numbers":
+    case "remote_jobs_training":
+    case "extra_services":
+      bot.sendMessage(chatId, "Select Option:", {
+        parse_mode: "Markdown",
+        reply_markup: { inline_keyboard: SUB_FLOWS[subFlow].options },
+      });
+      state.step = "chooseOption";
+      break;
+
+    case "referral_links":
+      state.usdPrice = 3.99;
+      state.kshPrice = Math.ceil(3.99 * EXCHANGE_RATE);
+      bot.sendMessage(chatId, `Referral Links: $${state.usdPrice.toFixed(2)}`, {
+        parse_mode: "Markdown",
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: "💳 Pay", callback_data: "choosePayment" }],
+            [{ text: "🔙 Back", callback_data: "backToService" }],
+          ],
+        },
+      });
+      state.step = "confirmOrder";
+      break;
+
+    case "maffulu":
+      state.step = "maffuluQuantity";
       bot.sendMessage(chatId, "Enter Quantity (1-1000):", {
         parse_mode: "Markdown",
         reply_markup: getFAQButtons(),
       });
       break;
 
-    case "usa_numbers":
-      bot.sendMessage(chatId, "Select Purpose:", {
-        parse_mode: "Markdown",
-        reply_markup: { inline_keyboard: SUB_FLOWS[subFlow].options },
-      });
-      state.step = "chooseNumType";
-      break;
-
-    case "remote_work_apply":
-      state.finalPrice = 1800;
-      bot.sendMessage(chatId, "Ksh 1,800", {
-        parse_mode: "Markdown",
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: "💳 Pay", callback_data: "choosePayment" }],
-            [{ text: "🔙 Back", callback_data: "backToService" }],
-          ],
-        },
-      });
-      state.step = "confirmOrder";
-      break;
-
     default:
-      bot.sendMessage(chatId, `${state.service.name}\nKsh ${state.finalPrice}`, {
-        parse_mode: "Markdown",
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: "💳 Pay", callback_data: "choosePayment" }],
-            [{ text: "🔙 Back", callback_data: "backToService" }],
-          ],
-        },
-      });
-      state.step = "confirmOrder";
+      showMainMenu(chatId);
       break;
   }
 }
 
 // 🔹 STK Push
 async function sendStkPush(chatId, phone, state) {
-  const loadingMsg = await bot.sendMessage(chatId, `Prompt to ${phone}. Ksh ${state.finalPrice}.`, { parse_mode: "Markdown" });
+  const loadingMsg = await bot.sendMessage(chatId, `Sending prompt to ${phone} for Ksh ${state.kshPrice}.`, { parse_mode: "Markdown" });
 
   try {
     const authResponse = await axios.get(
@@ -827,31 +813,31 @@ async function sendStkPush(chatId, phone, state) {
         Password: password,
         Timestamp: timestamp,
         TransactionType: "CustomerPayBillOnline",
-        Amount: state.finalPrice,
+        Amount: state.kshPrice,
         PartyA: phone,
         PartyB: process.env.MPESA_SHORTCODE,
         PhoneNumber: phone,
         CallBackURL: process.env.MPESA_CALLBACK_URL,
         AccountReference: `EchoLabs_${Date.now()}`,
-        TransactionDesc: `${state.service.name} - ${state.level || ''}`,
+        TransactionDesc: `${state.service.name} - ${state.level || state.country || state.job || state.option || state.trainingType || state.numType || ''}`,
       },
       { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
     );
 
     if (stkResponse.data.ResponseCode === "0") {
       state.transactionId = stkResponse.data.CheckoutRequestID;
-      await bot.editMessageText(`Prompt sent. Enter PIN.`, {
+      await bot.editMessageText(`Prompt sent to ${phone}. Enter PIN to complete payment.`, {
         chat_id: chatId,
         message_id: loadingMsg.message_id,
         parse_mode: "Markdown",
         reply_markup: getFAQButtons(),
       });
     } else {
-      throw new Error("STK Failed");
+      throw new Error("STK Push failed");
     }
   } catch (err) {
     console.error("STK Error:", err);
-    await bot.editMessageText(`Failed. Retry?`, {
+    await bot.editMessageText(`Failed to send prompt. Please retry or contact support.`, {
       chat_id: chatId,
       message_id: loadingMsg.message_id,
       parse_mode: "Markdown",
@@ -875,33 +861,27 @@ app.post("/callback", async (req, res) => {
     const metadata = callback.CallbackMetadata?.Item || [];
     const amount = metadata.find(item => item.Name === "Amount")?.Value;
     const receipt = metadata.find(item => item.Name === "MpesaReceiptNumber")?.Value;
-    const phone = metadata.find(item => item.Name === "PhoneNumber")?.Value;
 
     for (let [chatId, state] of userState.entries()) {
       if (state.transactionId === transactionId) {
-        await bot.sendMessage(chatId, `Success. Ksh ${amount}. Receipt: ${receipt}. Delivery soon.`, {
+        await bot.sendMessage(chatId, `✅ Payment successful! Ksh ${amount}. Receipt: ${receipt}. Your service will be delivered soon.`, {
           parse_mode: "Markdown",
-          reply_markup: { inline_keyboard: [[{ text: "🏠 Menu", callback_data: "restart_menu" }]] },
+          reply_markup: { inline_keyboard: [[{ text: "🏠 Main Menu", callback_data: "restart_menu" }]] },
         });
         userState.delete(chatId);
         break;
       }
     }
   } else {
-    for (let [chatId] of userState.entries()) {
-      bot.sendMessage(chatId, `Cancelled. Retry?`, {
-        parse_mode: "Markdown",
-        reply_markup: { inline_keyboard: [[{ text: "🔄 Yes", callback_data: "restart_menu" }]] },
-      }).catch(err => console.error(`Send error:`, err));
+    for (let [chatId, state] of userState.entries()) {
+      if (state.transactionId) {
+        bot.sendMessage(chatId, `❌ Payment cancelled or failed. Would you like to retry?`, {
+          parse_mode: "Markdown",
+          reply_markup: { inline_keyboard: [[{ text: "🔄 Retry", callback_data: "restart_menu" }]] },
+        }).catch(err => console.error(`Send error:`, err));
+      }
     }
   }
 
   res.json({ ResultCode: 0, ResultDesc: "Accepted" });
-});
-
-// 🔹 Start Command
-bot.onText(/\/start/, (msg) => {
-  const chatId = msg.chat.id;
-  userState.delete(chatId);
-  showMainMenu(chatId);
 });
