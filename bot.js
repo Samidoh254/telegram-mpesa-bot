@@ -2,6 +2,7 @@ require("dotenv").config();
 const TelegramBot = require("node-telegram-bot-api");
 const axios = require("axios");
 const express = require("express");
+const fs = require("fs"); // Added for logging
 
 const app = express();
 app.use(express.json());
@@ -452,7 +453,7 @@ bot.on("callback_query", async (query) => {
   if (data.startsWith("chb_")) {
     state.option = data.split("_")[1].charAt(0).toUpperCase() + data.split("_")[1].slice(1);
     if (data === "chb_training") {
-      state.usdPrice = 2.99;
+      state.usdPrice = 9.99; // Updated from 2.99 to match your code
     } else if (data === "chb_buying") {
       state.usdPrice = 199;
     }
@@ -476,7 +477,7 @@ bot.on("callback_query", async (query) => {
     if (data === "el_app_link") {
       state.usdPrice = 1.99;
     } else if (data === "el_training") {
-      state.usdPrice = 2.99;
+      state.usdPrice = 9.99; // Updated from 2.99 to match your code
     }
     state.kshPrice = Math.ceil(state.usdPrice * EXCHANGE_RATE);
     bot.sendMessage(chatId, `${state.option}: $${state.usdPrice.toFixed(2)}`, {
@@ -496,7 +497,7 @@ bot.on("callback_query", async (query) => {
   if (data.startsWith("ha_")) {
     state.option = data.split("_").slice(1).join(" ").charAt(0).toUpperCase() + data.split("_").slice(1).join(" ").slice(1);
     if (data === "ha_training") {
-      state.usdPrice = 2.99;
+      state.usdPrice = 9.99; // Updated from 2.99 to match your code
     } else if (data === "ha_buying") {
       state.usdPrice = 239;
     } else if (data === "ha_app_link") {
@@ -522,7 +523,7 @@ bot.on("callback_query", async (query) => {
   if (data.startsWith("ma_")) {
     state.option = data.split("_").slice(1).join(" ").charAt(0).toUpperCase() + data.split("_").slice(1).join(" ").slice(1);
     if (data === "ma_training") {
-      state.usdPrice = 2.99;
+      state.usdPrice = 9.99; // Updated from 2.99 to match your code
     } else if (data === "ma_buying") {
       state.usdPrice = 219;
     } else if (data === "ma_app_link") {
@@ -548,7 +549,7 @@ bot.on("callback_query", async (query) => {
   if (data.startsWith("ua_")) {
     state.option = data.split("_").slice(1).join(" ").charAt(0).toUpperCase() + data.split("_").slice(1).join(" ").slice(1);
     if (data === "ua_training") {
-      state.usdPrice = 2.99;
+      state.usdPrice = 9.99; // Updated from 2.99 to match your code
     } else if (data === "ua_buying") {
       state.usdPrice = 199;
     } else if (data === "ua_app_link") {
@@ -574,7 +575,7 @@ bot.on("callback_query", async (query) => {
   if (data.startsWith("cw_")) {
     state.option = data.split("_").slice(1).join(" ").charAt(0).toUpperCase() + data.split("_").slice(1).join(" ").slice(1);
     if (data === "cw_training") {
-      state.usdPrice = 2.99;
+      state.usdPrice = 2.99; // Assuming training was omitted intentionally
     } else if (data === "cw_buying") {
       state.usdPrice = 219;
     } else if (data === "cw_app_link") {
@@ -860,6 +861,7 @@ app.post("/callback", async (req, res) => {
     const metadata = callback.CallbackMetadata?.Item || [];
     const amount = metadata.find(item => item.Name === "Amount")?.Value;
     const receipt = metadata.find(item => item.Name === "MpesaReceiptNumber")?.Value;
+    const phone = metadata.find(item => item.Name === "PhoneNumber")?.Value;
 
     for (let [chatId, state] of userState.entries()) {
       if (state.transactionId === transactionId) {
@@ -867,6 +869,24 @@ app.post("/callback", async (req, res) => {
           parse_mode: "Markdown",
           reply_markup: { inline_keyboard: [[{ text: "🏠 Main Menu", callback_data: "restart_menu" }]] },
         });
+
+        // Log transaction to file
+        const logEntry = {
+          timestamp: new Date().toISOString(),
+          chatId,
+          service: state.service.name,
+          detail: state.level || state.country || state.job || state.option || state.trainingType || state.numType || `${state.quantity} Maffulu` || '',
+          amount,
+          receipt,
+          phone,
+        };
+        fs.appendFileSync('transactions.log', JSON.stringify(logEntry) + '\n');
+
+        // Send notification to support
+        await bot.sendMessage(SUPPORT_USERNAME, `✅ New Payment: Ksh ${amount} from ${phone}. Receipt: ${receipt}. User: ${chatId}. Service: ${state.service.name} - ${logEntry.detail}`, {
+          parse_mode: "Markdown",
+        });
+
         userState.delete(chatId);
         break;
       }
